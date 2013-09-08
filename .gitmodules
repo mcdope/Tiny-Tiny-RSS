@@ -1,0 +1,12 @@
+[submodule "contrib"]
+	path = contrib
+	url = git@github.com:mcdope/Tiny-Tiny-RSS-Contrib.git
+[submodule "plugins/videoframes"]
+	path = plugins/videoframes
+	url = https://github.com/tribut/ttrss-videoframes.git
+[submodule "plugins/af_feedmod"]
+	path = plugins/af_feedmod
+	url = https://github.com/mbirth/ttrss_plugin-af_feedmod.git
+[submodule "themes-git/feedly"]
+	path = themes-git/feedly
+	url = https://github.com/levito/tt-rss-feedly-theme.git
