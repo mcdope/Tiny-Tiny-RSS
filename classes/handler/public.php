@@ -15,11 +15,15 @@ class Handler_Public extends Handler {
 		if (!$limit) $limit = 60;
 
 		$date_sort_field = "date_entered DESC, updated DESC";
+		$date_check_field = "date_entered";
 
-		if ($feed == -2)
+		if ($feed == -2 && !$is_cat) {
 			$date_sort_field = "last_published DESC";
-		else if ($feed == -1)
+			$date_check_field = "last_published";
+		} else if ($feed == -1 && !$is_cat) {
 			$date_sort_field = "last_marked DESC";
+			$date_check_field = "last_marked";
+		}
 
 		switch ($order) {
 		case "title":
@@ -41,7 +45,8 @@ class Handler_Public extends Handler {
 		$result = $qfh_ret[0];
 
 		if ($this->dbh->num_rows($result) != 0) {
-			$ts = strtotime($this->dbh->fetch_result($result, 0, "date_entered"));
+
+			$ts = strtotime($this->dbh->fetch_result($result, 0, $date_check_field));
 
 			if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) &&
 					strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) >= $ts) {
@@ -118,7 +123,7 @@ class Handler_Public extends Handler {
 				$tpl->setVariable('ARTICLE_AUTHOR', htmlspecialchars($line['author']), true);
 
 				$tpl->setVariable('ARTICLE_SOURCE_LINK', htmlspecialchars($line['site_url']), true);
-				$tpl->setVariable('ARTICLE_SOURCE_TITLE', htmlspecialchars($line['feed_title']), true);
+				$tpl->setVariable('ARTICLE_SOURCE_TITLE', htmlspecialchars($line['feed_title'] ? $line['feed_title'] : $feed_title), true);
 
 				$tags = get_article_tags($line["id"], $owner_uid);
 
@@ -411,7 +416,9 @@ class Handler_Public extends Handler {
 		}
 
 		header('Content-Type: text/html; charset=utf-8');
-		print "<html><head><title>Tiny Tiny RSS</title>";
+		print "<html><head><title>Tiny Tiny RSS</title>
+		<link rel=\"shortcut icon\" type=\"image/png\" href=\"images/favicon.png\">
+		<link rel=\"icon\" type=\"image/png\" sizes=\"72x72\" href=\"images/favicon-72px.png\">";
 
 		stylesheet_tag("css/utility.css");
 		javascript_tag("lib/prototype.js");
@@ -587,6 +594,9 @@ class Handler_Public extends Handler {
 					<title>Tiny Tiny RSS</title>
 					<link rel=\"stylesheet\" type=\"text/css\" href=\"css/utility.css\">
 					<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/>
+					<link rel=\"shortcut icon\" type=\"image/png\" href=\"images/favicon.png\">
+					<link rel=\"icon\" type=\"image/png\" sizes=\"72x72\" href=\"images/favicon-72px.png\">
+
 				</head>
 				<body>
 				<img class=\"floatingLogo\" src=\"images/logo_small.png\"
@@ -767,7 +777,9 @@ class Handler_Public extends Handler {
 		startup_gettext();
 
 		header('Content-Type: text/html; charset=utf-8');
-		print "<html><head><title>Tiny Tiny RSS</title>";
+		print "<html><head><title>Tiny Tiny RSS</title>
+		<link rel=\"shortcut icon\" type=\"image/png\" href=\"images/favicon.png\">
+		<link rel=\"icon\" type=\"image/png\" sizes=\"72x72\" href=\"images/favicon-72px.png\">";
 
 		stylesheet_tag("css/utility.css");
 		javascript_tag("lib/prototype.js");
@@ -872,6 +884,8 @@ class Handler_Public extends Handler {
 			<title>Database Updater</title>
 			<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 			<link rel="stylesheet" type="text/css" href="css/utility.css"/>
+			<link rel=\"shortcut icon\" type=\"image/png\" href=\"images/favicon.png\">
+			<link rel=\"icon\" type=\"image/png\" sizes=\"72x72\" href=\"images/favicon-72px.png\">
 			</head>
 			<style type="text/css">
 				span.ok { color : #009000; font-weight : bold; }

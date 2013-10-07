@@ -378,6 +378,11 @@
 			curl_setopt($ch, CURLOPT_USERAGENT, SELF_USER_AGENT);
 			curl_setopt($ch, CURLOPT_ENCODING, "");
 			curl_setopt($ch, CURLOPT_REFERER, $url);
+			curl_setopt($ch, CURLOPT_COOKIEJAR, "/dev/null");
+
+			if (defined('_CURL_HTTP_PROXY')) {
+				curl_setopt($ch, CURLOPT_PROXY, _CURL_HTTP_PROXY);
+			}
 
 			if ($post_query) {
 				curl_setopt($ch, CURLOPT_POST, true);
@@ -1417,9 +1422,9 @@
 			$intl = get_pref("FRESH_ARTICLE_MAX_AGE", $owner_uid);
 
 			if (DB_TYPE == "pgsql") {
-				$match_part .= " AND updated > NOW() - INTERVAL '$intl hour' ";
+				$match_part .= " AND date_entered > NOW() - INTERVAL '$intl hour' ";
 			} else {
-				$match_part .= " AND updated > DATE_SUB(NOW(), INTERVAL $intl HOUR) ";
+				$match_part .= " AND date_entered > DATE_SUB(NOW(), INTERVAL $intl HOUR) ";
 			}
 
 			$need_entries = true;
@@ -3242,6 +3247,9 @@
 						<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/>
 						<title>Tiny Tiny RSS - ".$line["title"]."</title>
 						<link rel=\"stylesheet\" type=\"text/css\" href=\"css/tt-rss.css\">
+						<link rel=\"shortcut icon\" type=\"image/png\" href=\"images/favicon.png\">
+						<link rel=\"icon\" type=\"image/png\" sizes=\"72x72\" href=\"images/favicon-72px.png\">
+
 						<script type=\"text/javascript\">
 						function openSelectedAttachment(elem) {
 							try {
@@ -4212,6 +4220,10 @@
 		//curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true); //CURLOPT_FOLLOWLOCATION Disabled...
 		curl_setopt($curl, CURLOPT_TIMEOUT, 60);
 		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+
+		if (defined('_CURL_HTTP_PROXY')) {
+			curl_setopt($curl, CURLOPT_PROXY, _CURL_HTTP_PROXY);
+		}
 
 		if ((OPENSSL_VERSION_NUMBER >= 0x0090808f) && (OPENSSL_VERSION_NUMBER < 0x10000000)) {
 			curl_setopt($curl, CURLOPT_SSLVERSION, 3);
