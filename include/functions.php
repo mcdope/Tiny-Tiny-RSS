@@ -804,7 +804,7 @@
 	}
 
 	function load_user_plugins($owner_uid) {
-		if ($owner_uid) {
+		if ($owner_uid && SCHEMA_VERSION >= 100) {
 			$plugins = get_pref("_ENABLED_PLUGINS", $owner_uid);
 
 			PluginHost::getInstance()->load($plugins, PluginHost::KIND_USER, $owner_uid);
@@ -819,6 +819,7 @@
 		if (SINGLE_USER_MODE) {
 			@session_start();
 			authenticate_user("admin", null);
+			startup_gettext();
 			load_user_plugins($_SESSION["uid"]);
 		} else {
 			if (!validate_session()) $_SESSION["uid"] = false;
