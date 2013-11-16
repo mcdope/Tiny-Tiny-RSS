@@ -1144,8 +1144,8 @@
 
 						db_query("UPDATE ttrss_user_entries
 							SET unread = false,last_read = NOW() WHERE (SELECT COUNT(*)
-								FROM ttrss_user_labels2 WHERE article_id = ref_id) > 0
-								AND unread = true AND $date_qpart AND owner_uid = $owner_uid");
+								FROM ttrss_user_labels2, ttrss_entries WHERE article_id = ref_id AND id = ref_id AND $date_qpart) > 0
+								AND unread = true AND owner_uid = $owner_uid");
 					}
 
 				} else if ($feed > 0) {
@@ -2243,7 +2243,7 @@
 
 		$search_query_part = "";
 
-		$keywords = explode(" ", $search);
+		$keywords = str_getcsv($search, " ");
 		$query_keywords = array();
 		$search_words = array();
 
