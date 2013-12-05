@@ -91,7 +91,7 @@ class Handler_Public extends Handler {
 
 			$tpl->setVariable('SELF_URL', htmlspecialchars(get_self_url_prefix()), true);
 			while ($line = $this->dbh->fetch_assoc($result)) {
-				$line["content_preview"] = truncate_string(strip_tags($line["content_preview"]), 100, '...');
+				$line["content_preview"] = truncate_string(strip_tags($line["content"]), 100, '...');
 
 				foreach (PluginHost::getInstance()->get_hooks(PluginHost::HOOK_QUERY_HEADLINES) as $p) {
 					$line = $p->hook_query_headlines($line);
@@ -377,7 +377,7 @@ class Handler_Public extends Handler {
 		$order = $this->dbh->escape_string($_REQUEST["order"]);
 
 		$format = $this->dbh->escape_string($_REQUEST['format']);
-		$orig_guid = !sql_bool_to_bool($_REQUEST["no_orig_guid"]);
+		$orig_guid = sql_bool_to_bool($_REQUEST["orig_guid"]);
 
 		if (!$format) $format = 'atom';
 
