@@ -2831,9 +2831,12 @@
 
 			if ($site_url) {
 
-				if ($entry->hasAttribute('href'))
+				if ($entry->hasAttribute('href')) {
 					$entry->setAttribute('href',
 						rewrite_relative_url($site_url, $entry->getAttribute('href')));
+
+					$entry->setAttribute('rel', 'noreferrer');
+				}
 
 				if ($entry->hasAttribute('src')) {
 					$src = rewrite_relative_url($site_url, $entry->getAttribute('src'));
@@ -3753,7 +3756,7 @@
 		if (db_num_rows($result) == 1) {
 			return db_fetch_result($result, 0, "access_key");
 		} else {
-			$key = db_escape_string(uniqid());
+			$key = db_escape_string(uniqid(base_convert(rand(), 10, 36)));
 
 			$result = db_query("INSERT INTO ttrss_access_keys
 				(access_key, feed_id, is_cat, owner_uid)
