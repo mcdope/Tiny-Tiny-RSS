@@ -43,6 +43,8 @@ class Feeds extends Handler_Protected {
 			$search_q = "";
 		}
 
+		$reply .= "<span class=\"holder\">";
+
 		$rss_link = htmlspecialchars(get_self_url_prefix() .
 			"/public.php?op=rss&id=$feed_id$cat_q$search_q");
 
@@ -50,8 +52,14 @@ class Feeds extends Handler_Protected {
 
 		$error_class = $error ? "error" : "";
 
-		$reply .= "<span class='r'>";
-		$reply .= "<span id='selected_prompt'></span>";
+		$reply .= "<span class='r'>
+			<a href=\"#\"
+				title=\"".__("View as RSS feed")."\"
+				onclick=\"displayDlg('".__("View as RSS")."','generatedFeed', '$feed_id:$is_cat:$rss_link')\">
+				<img class=\"noborder\" src=\"images/pub_set.png\"></a>";
+
+
+#		$reply .= "<span>";
 		$reply .= "<span id='feed_title' class='$error_class'>";
 
 		if ($feed_site_url) {
@@ -60,7 +68,7 @@ class Feeds extends Handler_Protected {
 
 			$target = "target=\"_blank\"";
 			$reply .= "<a title=\"$last_updated\" $target href=\"$feed_site_url\">".
-				truncate_string($feed_title,30)."</a>";
+				truncate_string($feed_title, 20)."</a>";
 
 			if ($error) {
 				$error = htmlspecialchars($error);
@@ -73,17 +81,16 @@ class Feeds extends Handler_Protected {
 
 		$reply .= "</span>";
 
-		$reply .= "
-			<a href=\"#\"
-				title=\"".__("View as RSS feed")."\"
-				onclick=\"displayDlg('".__("View as RSS")."','generatedFeed', '$feed_id:$is_cat:$rss_link')\">
-				<img class=\"noborder\" style=\"vertical-align : middle\" src=\"images/pub_set.png\"></a>";
-
 		$reply .= "</span>";
+
+#		$reply .= "</span>";
 
 		// left part
 
-		$reply .= __('Select:')."
+		$reply .= "<span class=\"main\">";
+		$reply .= "<span id='selected_prompt'></span>";
+
+		$reply .= "
 			<a href=\"#\" onclick=\"$sel_all_link\">".__('All')."</a>,
 			<a href=\"#\" onclick=\"$sel_unread_link\">".__('Unread')."</a>,
 			<a href=\"#\" onclick=\"$sel_inv_link\">".__('Invert')."</a>,
@@ -132,13 +139,13 @@ class Feeds extends Handler_Protected {
 
 		$reply .= "</select>";
 
-		//$reply .= "</div>";
-
 		//$reply .= "</h2";
 
 		foreach (PluginHost::getInstance()->get_hooks(PluginHost::HOOK_HEADLINE_TOOLBAR_BUTTON) as $p) {
 			 echo $p->hook_headline_toolbar_button($feed_id, $is_cat);
 		}
+
+		$reply .= "</span></span>";
 
 		return $reply;
 	}
@@ -473,16 +480,17 @@ class Feeds extends Handler_Protected {
 
 					$reply['content'] .= "</div>";
 
-					$reply['content'] .= "<span class=\"hlUpdated\">";
-
 					if (!get_pref('VFEED_GROUP_BY_FEED')) {
 						if (@$line["feed_title"]) {
 							$rgba = @$rgba_cache[$feed_id];
 
-							$reply['content'] .= "<a class=\"hlFeed\" style=\"background : rgba($rgba, 0.3)\" href=\"#\" onclick=\"viewfeed($feed_id)\">".
-								truncate_string($line["feed_title"],30)."</a>";
+							$reply['content'] .= "<span class=\"hlFeed\"><a style=\"background : rgba($rgba, 0.3)\" href=\"#\" onclick=\"viewfeed($feed_id)\">".
+								truncate_string($line["feed_title"],30)."</a></span>";
 						}
 					}
+
+
+					$reply['content'] .= "<span class=\"hlUpdated\">";
 
 					$reply['content'] .= "<div title='$date_entered_fmt'>$updated_fmt</div>
 						</span>";
@@ -725,7 +733,7 @@ class Feeds extends Handler_Protected {
 					$reply['content'] .= "</div>";
 					$reply['content'] .= "</div>";
 
-					$reply['content'] .= "</div><hr/>";
+					$reply['content'] .= "</div>";
 
 					$reply['content'] .= "</div>";
 
