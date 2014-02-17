@@ -30,6 +30,7 @@ class Af_Comics extends Plugin {
 		<li>Dilbert</li>
 		<li>Explosm</li>
 		<li>GoComics</li>
+		<li>Happy Jar</li>
 		<li>Penny Arcade</li>
 		<li>Three word phrase</li>
 		<li>Whomp</li>";
@@ -48,12 +49,21 @@ class Af_Comics extends Plugin {
 		if (strpos($article["guid"], "bunicomic.com") !== FALSE ||
 				strpos($article["guid"], "buttersafe.com") !== FALSE ||
 				strpos($article["guid"], "whompcomic.com") !== FALSE ||
+				strpos($article["guid"], "happyjar.com") !== FALSE ||
 				strpos($article["guid"], "csectioncomics.com") !== FALSE) {
 
 			 if (strpos($article["plugin_data"], "af_comics,$owner_uid:") === FALSE) {
 
+
+				// lol at people who block clients by user agent
+				// oh noes my ad revenue Q_Q
+
+				$res = fetch_file_contents($article["link"], false, false, false,
+					 false, false, 0,
+					 "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)");
+
 				$doc = new DOMDocument();
-				@$doc->loadHTML(fetch_file_contents($article["link"]));
+				@$doc->loadHTML($res);
 
 				$basenode = false;
 
@@ -200,11 +210,7 @@ class Af_Comics extends Plugin {
 
 				if ($doc) {
 					$xpath = new DOMXPath($doc);
-					$entries = $xpath->query('(//div[@class="post comic"])');
-
-					foreach ($entries as $entry) {
-						$basenode = $entry;
-					}
+					$basenode = $xpath->query('(//div[@id="comicFrame"])')->item(0);
 
 					if ($basenode) {
 						$article["content"] = $doc->saveXML($basenode);
@@ -234,7 +240,19 @@ class Af_Comics extends Plugin {
 						$basenode = $entry;
 					}
 
-					$uninteresting = $xpath->query('(//div[@class="heading"])');
+					$meta = $xpath->query('(//div[@class="meta"])')->item(0);
+					if ($meta->parentNode) { $meta->parentNode->removeChild($meta); }
+
+					$header = $xpath->query('(//div[@class="postBody"]/h2)')->item(0);
+					if ($header->parentNode) { $header->parentNode->removeChild($header); }
+
+					$header = $xpath->query('(//div[@class="postBody"]/div[@class="comicPost"])')->item(0);
+					if ($header->parentNode) { $header->parentNode->removeChild($header); }
+
+					$avatar = $xpath->query('(//div[@class="avatar"]//img)')->item(0);
+					$basenode->insertBefore($avatar, $basenode->firstChild);
+
+					$uninteresting = $xpath->query('(//div[@class="avatar"])');
 					foreach ($uninteresting as $i) {
 						$i->parentNode->removeChild($i);
 					}
