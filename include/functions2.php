@@ -17,6 +17,13 @@
 		$params["default_view_order_by"] = get_pref("_DEFAULT_VIEW_ORDER_BY");
 		$params["bw_limit"] = (int) $_SESSION["bw_limit"];
 		$params["label_base_index"] = (int) LABEL_BASE_INDEX;
+		$params["theme"] = get_pref("USER_CSS_THEME", false, false);
+		$params["plugins"] = implode(", ", PluginHost::getInstance()->get_plugin_names());
+
+		$params["php_platform"] = PHP_OS;
+		$params["php_version"] = PHP_VERSION;
+
+		$params["sanity_checksum"] = sha1(file_get_contents("include/sanity_check.php"));
 
 		$result = db_query("SELECT MAX(id) AS mid, COUNT(*) AS nf FROM
 			ttrss_feeds WHERE owner_uid = " . $_SESSION["uid"]);
@@ -583,6 +590,7 @@
 				$query_strategy_part = "unread = false AND last_read IS NOT NULL";
 				$vfeed_query_part = "ttrss_feeds.title AS feed_title,";
 				$allow_archived = true;
+				$ignore_vfeed_group = true;
 
 				if (!$override_order) $override_order = "last_read DESC";
 
