@@ -66,7 +66,7 @@ class Feeds extends Handler_Protected {
 
 			if ($error) {
 				$error = htmlspecialchars($error);
-				$reply .= "&nbsp;<img title=\"$error\" src='images/error.png' alt='error' class=\"noborder\" style=\"vertical-align : middle\">";
+				$reply .= "&nbsp;<img title=\"$error\" src='images/error.png' alt='error' class=\"noborder\">";
 			}
 
 		} else {
@@ -498,7 +498,7 @@ class Feeds extends Handler_Protected {
 						$reply['content'] .= "<span onclick=\"viewfeed($feed_id)\"
 							style=\"cursor : pointer\"
 							title=\"".htmlspecialchars($line['feed_title'])."\">
-							$feed_icon_img<span>";
+							$feed_icon_img</span>";
 					}
 
 					$reply['content'] .= "</div>";
