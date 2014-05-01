@@ -1,6 +1,6 @@
 <?php
 	define('EXPECTED_CONFIG_VERSION', 26);
-	define('SCHEMA_VERSION', 124);
+	define('SCHEMA_VERSION', 125);
 
 	define('LABEL_BASE_INDEX', -1024);
 	define('PLUGIN_FEED_BASE_INDEX', -128);
@@ -1965,6 +1965,8 @@
 	function getFeedTitle($id, $cat = false) {
 		if ($cat) {
 			return getCategoryTitle($id);
+		} else if ($id == 0) {
+			return __("All feeds");
 		} else if ($id == -1) {
 			return __("Starred articles");
 		} else if ($id == -2) {

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: tt-rss 1.2.14.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-03-19 15:44+0400\n"
+"POT-Creation-Date: 2014-04-02 08:18+0000\n"
 "PO-Revision-Date: 2013-08-08 23:19-0300\n"
 "Last-Translator: Duarte Velez Grilo <duartegrilo@gmail.com>\n"
 "Language-Team: Portuguese/Portugal <duartegrilo@gmail.com>\n"
@@ -136,11 +136,11 @@ msgstr "Nenhuma operação a executar."
 
 #: errors.php:25
 msgid "Could not display feed: query failed. Please check label match syntax or local configuration."
-msgstr "Não foi possível mostrar a assinatura: Consulta falhou. Verifique se a sintaxe do label bate com a configuração local."
+msgstr "Não foi possível mostrar o feed: a consulta falhou. Verifique a sintaxe da etiqueta ou a configuração local."
 
 #: errors.php:27
 msgid "Denied. Your access level is insufficient to access this page."
-msgstr "Negado. Seu nível de acesso é insuficiente para acessar esta página."
+msgstr "Negado. O seu nível de acesso é insuficiente para acessar esta página."
 
 #: errors.php:29
 msgid "Configuration check failed"
@@ -148,11 +148,11 @@ msgstr "A verificação da configuração falhou"
 
 #: errors.php:31
 msgid "Your version of MySQL is not currently supported. Please see official site for more information."
-msgstr "A sua versão do MySQL não é atualmente suportada. Por favor acesse o site oficial para mais informações."
+msgstr "A sua versão do MySQL não é actualmente suportada. Por favor aceda ao site oficial para mais informações."
 
 #: errors.php:35
 msgid "SQL escaping test failed, check your database and PHP configuration"
-msgstr "Teste de conversão de escapes no SQL falhou, verifique sua configuração de banco de dados e PHP"
+msgstr "Teste de conversão de escapes no SQL falhou, verifique a configuração da sua base de dados e PHP"
 
 #: index.php:133
 #: index.php:150
@@ -160,7 +160,7 @@ msgstr "Teste de conversão de escapes no SQL falhou, verifique sua configuraç�
 #: prefs.php:102
 #: classes/backend.php:5
 #: classes/pref/labels.php:296
-#: classes/pref/filters.php:666
+#: classes/pref/filters.php:702
 #: classes/pref/feeds.php:1361
 #: js/feedlist.js:126
 #: js/feedlist.js:450
@@ -187,12 +187,12 @@ msgstr "Teste de conversão de escapes no SQL falhou, verifique sua configuraç�
 #: plugins/import_export/import_export.js:17
 #: plugins/updater/updater.js:17
 msgid "Loading, please wait..."
-msgstr "Carregando, por favor aguarde..."
+msgstr "A carregar, por favor aguarde..."
 
 #: index.php:168
 #, fuzzy
 msgid "Collapse feedlist"
-msgstr "Todos os feeds"
+msgstr "Fechar lista de feeds"
 
 #: index.php:171
 msgid "Show articles"
@@ -226,15 +226,15 @@ msgstr "Não Lidos"
 
 #: index.php:179
 msgid "Unread First"
-msgstr "Não Lidos primeiro"
+msgstr "Não Lidos Primeiro"
 
 #: index.php:180
 msgid "With Note"
-msgstr "Com anotação"
+msgstr "Com Anotação"
 
 #: index.php:181
 msgid "Ignore Scoring"
-msgstr "Ignorar pontuação"
+msgstr "Ignorar Pontuação"
 
 #: index.php:184
 msgid "Sort articles"
@@ -246,7 +246,7 @@ msgstr "Padrão"
 
 #: index.php:188
 msgid "Newest first"
-msgstr "Mais novos primeiro"
+msgstr "Mais recentes primeiro"
 
 #: index.php:189
 msgid "Oldest first"
@@ -279,7 +279,7 @@ msgstr "Com mais de duas semanas"
 
 #: index.php:219
 msgid "Communication problem with server."
-msgstr "Problemas na comunicação com o servidor"
+msgstr "Problemas de comunicação com o servidor"
 
 #: index.php:227
 msgid "New version of Tiny Tiny RSS is available!"
@@ -287,7 +287,7 @@ msgstr "Uma nova versão do TT-Rss está disponível!"
 
 #: index.php:232
 msgid "Actions..."
-msgstr "Ações..."
+msgstr "Acções..."
 
 #: index.php:234
 msgid "Preferences..."
@@ -299,27 +299,27 @@ msgstr "Pesquisar"
 
 #: index.php:236
 msgid "Feed actions:"
-msgstr "Ações do Feed:"
+msgstr "Acções do Feed:"
 
 #: index.php:237
 #: classes/handler/public.php:628
 msgid "Subscribe to feed..."
-msgstr "Inscrever-se"
+msgstr "Assinar feed..."
 
 #: index.php:238
 msgid "Edit this feed..."
-msgstr "Editar inscrição"
+msgstr "Editar assinatura..."
 
 #: index.php:239
 msgid "Rescore feed"
-msgstr "Reclassificar inscrição"
+msgstr "Reclassificar assinatura"
 
 #: index.php:240
 #: classes/pref/feeds.php:756
 #: classes/pref/feeds.php:1316
 #: js/PrefFeedTree.js:74
 msgid "Unsubscribe"
-msgstr "Cancelar inscrição"
+msgstr "Cancelar assinatura"
 
 #: index.php:241
 msgid "All feeds:"
@@ -327,16 +327,16 @@ msgstr "Todos os Feeds:"
 
 #: index.php:243
 msgid "(Un)hide read feeds"
-msgstr "Mostrar/Ocultar inscrições lidas"
+msgstr "Mostrar/Ocultar feeds lidos"
 
 #: index.php:244
 msgid "Other actions:"
-msgstr "Outras ações:"
+msgstr "Outras acções:"
 
 #: index.php:245
 #: include/functions2.php:75
 msgid "Toggle widescreen mode"
-msgstr "Ativa/Desativa modo tela-cheia"
+msgstr "Activa/Desactiva modo widescreen"
 
 #: index.php:246
 msgid "Select by tags..."
@@ -348,7 +348,7 @@ msgstr "Criar marcador..."
 
 #: index.php:248
 msgid "Create filter..."
-msgstr "Cria um filtro..."
+msgstr "Criar filtro..."
 
 #: index.php:249
 msgid "Keyboard shortcuts help"
@@ -378,23 +378,23 @@ msgstr "Sair das preferências"
 #: classes/pref/feeds.php:1242
 #: classes/pref/feeds.php:1305
 msgid "Feeds"
-msgstr "Inscrições"
+msgstr "Assinaturas"
 
 #: prefs.php:126
-#: classes/pref/filters.php:154
+#: classes/pref/filters.php:186
 msgid "Filters"
 msgstr "Filtros"
 
 #: prefs.php:129
-#: include/functions.php:1255
-#: include/functions.php:1915
+#: include/functions.php:1256
+#: include/functions.php:1916
 #: classes/pref/labels.php:90
 msgid "Labels"
 msgstr "Marcadores"
 
 #: prefs.php:133
 msgid "Users"
-msgstr "Usuários"
+msgstr "Utilizadores"
 
 #: prefs.php:136
 msgid "System"
@@ -407,7 +407,7 @@ msgstr "Criar uma nova conta"
 
 #: register.php:193
 msgid "New user registrations are administratively disabled."
-msgstr "Registro de novos usuários foi desativado pelo administrador"
+msgstr "O registro de novos utilizadores foi desactivado pelo administrador"
 
 #: register.php:197
 #: register.php:242
@@ -425,15 +425,15 @@ msgstr "Registro de novos usuários foi desativado pelo administrador"
 #: classes/handler/public.php:967
 #: classes/handler/public.php:992
 msgid "Return to Tiny Tiny RSS"
-msgstr "Retornar ao TT-Rss"
+msgstr "Voltar ao TT-Rss"
 
 #: register.php:218
 msgid "Your temporary password will be sent to the specified email. Accounts, which were not logged in once, are erased automatically 24 hours after temporary password is sent."
-msgstr "Sua senha temporária será enviada para o e-mail informado. Contas que não recebam pelo menos um acesso são apagadas automaticamente 24 horas depois do envio da senha temporária."
+msgstr "A sua palavra-pasee temporária será enviada para o e-mail especificado. Contas que não recebam, pelo menos, um acesso são apagadas automaticamente 24 horas depois do envio da palavra-passe temporária."
 
 #: register.php:224
 msgid "Desired login:"
-msgstr "Nome de usuário:"
+msgstr "Nome de utilizador:"
 
 #: register.php:227
 msgid "Check availability"
@@ -451,19 +451,19 @@ msgstr "Quanto é dois mais dois:"
 
 #: register.php:235
 msgid "Submit registration"
-msgstr "Enviar o cadastro"
+msgstr "Submeter registo"
 
 #: register.php:253
 msgid "Your registration information is incomplete."
-msgstr "Sua informação de cadastro está incompleta."
+msgstr "A sua informação de registo está incompleta."
 
 #: register.php:268
 msgid "Sorry, this username is already taken."
-msgstr "Desculpe, esse nome de usuário já está sendo usado."
+msgstr "Desculpe, esse nome de utilizador já está em uso."
 
 #: register.php:287
 msgid "Registration failed."
-msgstr "Processo de registro falhou."
+msgstr "Processo de registo falhou."
 
 #: register.php:334
 msgid "Account created successfully."
@@ -471,17 +471,17 @@ msgstr "Conta criada com sucesso."
 
 #: register.php:356
 msgid "New user registrations are currently closed."
-msgstr "Registro de novos usuários está suspenso."
+msgstr "O registro de novos utilizador está actualmente suspenso."
 
 #: update.php:62
 msgid "Tiny Tiny RSS data update script."
-msgstr "Script de atualização do Tiny Tiny RSS."
+msgstr "Script de actualização do Tiny Tiny RSS."
 
 #: include/digest.php:109
-#: include/functions.php:1264
-#: include/functions.php:1816
-#: include/functions.php:1901
-#: include/functions.php:1923
+#: include/functions.php:1265
+#: include/functions.php:1817
+#: include/functions.php:1902
+#: include/functions.php:1924
 #: classes/opml.php:421
 #: classes/pref/feeds.php:225
 msgid "Uncategorized"
@@ -497,7 +497,7 @@ msgstr[2] "%d artigos arquivados"
 
 #: include/feedbrowser.php:106
 msgid "No feeds found."
-msgstr "Sem inscrições para exibir."
+msgstr "Sem assinaturas para exibir."
 
 #: include/functions2.php:49
 msgid "Navigation"
@@ -697,7 +697,7 @@ msgid "Go to"
 msgstr "Ir para"
 
 #: include/functions2.php:97
-#: include/functions.php:1974
+#: include/functions.php:1977
 msgid "All articles"
 msgstr "Todas as inscrições"
 
@@ -721,7 +721,7 @@ msgid "Create label"
 msgstr "Criar marcador"
 
 #: include/functions2.php:105
-#: classes/pref/filters.php:640
+#: classes/pref/filters.php:676
 msgid "Create filter"
 msgstr "Criar filtro"
 
@@ -819,34 +819,35 @@ msgstr "Anexos"
 msgid "LibXML error %s at line %d (column %d): %s"
 msgstr "Erro LibXML %s na linha %d (coluna %d): %s"
 
-#: include/functions.php:1253
-#: include/functions.php:1913
+#: include/functions.php:1254
+#: include/functions.php:1914
 msgid "Special"
 msgstr "Especial"
 
-#: include/functions.php:1764
+#: include/functions.php:1765
+#: include/functions.php:1969
 #: classes/feeds.php:1118
-#: classes/pref/filters.php:412
+#: classes/pref/filters.php:445
 msgid "All feeds"
 msgstr "Todos os feeds"
 
-#: include/functions.php:1968
+#: include/functions.php:1971
 msgid "Starred articles"
 msgstr "Artigos com estrela"
 
-#: include/functions.php:1970
+#: include/functions.php:1973
 msgid "Published articles"
 msgstr "Artigos publicados"
 
-#: include/functions.php:1972
+#: include/functions.php:1975
 msgid "Fresh articles"
 msgstr "Últimas notícias"
 
-#: include/functions.php:1976
+#: include/functions.php:1979
 msgid "Archived articles"
 msgstr "Artigos arquivados"
 
-#: include/functions.php:1978
+#: include/functions.php:1981
 msgid "Recently read"
 msgstr "Lidos recentemente"
 
@@ -924,7 +925,7 @@ msgstr "Tags para esse artigo (separadas por vírgula):"
 #: classes/article.php:203
 #: classes/pref/users.php:168
 #: classes/pref/labels.php:79
-#: classes/pref/filters.php:390
+#: classes/pref/filters.php:423
 #: classes/pref/prefs.php:985
 #: classes/pref/feeds.php:772
 #: classes/pref/feeds.php:899
@@ -942,10 +943,10 @@ msgstr "Salvar"
 #: classes/feeds.php:1157
 #: classes/pref/users.php:170
 #: classes/pref/labels.php:81
-#: classes/pref/filters.php:393
-#: classes/pref/filters.php:789
-#: classes/pref/filters.php:870
-#: classes/pref/filters.php:937
+#: classes/pref/filters.php:426
+#: classes/pref/filters.php:825
+#: classes/pref/filters.php:906
+#: classes/pref/filters.php:973
 #: classes/pref/prefs.php:987
 #: classes/pref/feeds.php:773
 #: classes/pref/feeds.php:902
@@ -1170,11 +1171,11 @@ msgstr "Última atualização em: %s"
 #: classes/feeds.php:88
 #: classes/pref/users.php:337
 #: classes/pref/labels.php:275
-#: classes/pref/filters.php:267
-#: classes/pref/filters.php:315
-#: classes/pref/filters.php:634
-#: classes/pref/filters.php:722
-#: classes/pref/filters.php:749
+#: classes/pref/filters.php:300
+#: classes/pref/filters.php:348
+#: classes/pref/filters.php:670
+#: classes/pref/filters.php:758
+#: classes/pref/filters.php:785
 #: classes/pref/prefs.php:999
 #: classes/pref/feeds.php:1299
 #: classes/pref/feeds.php:1556
@@ -1190,11 +1191,11 @@ msgstr "Inverter"
 #: classes/feeds.php:91
 #: classes/pref/users.php:339
 #: classes/pref/labels.php:277
-#: classes/pref/filters.php:269
-#: classes/pref/filters.php:317
-#: classes/pref/filters.php:636
-#: classes/pref/filters.php:724
-#: classes/pref/filters.php:751
+#: classes/pref/filters.php:302
+#: classes/pref/filters.php:350
+#: classes/pref/filters.php:672
+#: classes/pref/filters.php:760
+#: classes/pref/filters.php:787
 #: classes/pref/prefs.php:1001
 #: classes/pref/feeds.php:1301
 #: classes/pref/feeds.php:1558
@@ -1228,10 +1229,10 @@ msgid "Move back"
 msgstr "Retornar"
 
 #: classes/feeds.php:114
-#: classes/pref/filters.php:276
-#: classes/pref/filters.php:324
-#: classes/pref/filters.php:731
-#: classes/pref/filters.php:758
+#: classes/pref/filters.php:309
+#: classes/pref/filters.php:357
+#: classes/pref/filters.php:767
+#: classes/pref/filters.php:794
 msgid "Delete"
 msgstr "Apaga"
 
@@ -1361,7 +1362,7 @@ msgstr "Mais inscrições"
 #: classes/feeds.php:1067
 #: classes/feeds.php:1156
 #: classes/pref/users.php:324
-#: classes/pref/filters.php:627
+#: classes/pref/filters.php:663
 #: classes/pref/feeds.php:1292
 #: js/tt-rss.js:174
 msgid "Search"
@@ -1382,8 +1383,8 @@ msgstr "limite:"
 #: classes/feeds.php:1096
 #: classes/pref/users.php:350
 #: classes/pref/labels.php:284
-#: classes/pref/filters.php:383
-#: classes/pref/filters.php:653
+#: classes/pref/filters.php:416
+#: classes/pref/filters.php:689
 #: classes/pref/feeds.php:743
 #: plugins/instances/init.php:294
 msgid "Remove"
@@ -1569,11 +1570,11 @@ msgstr "[tt-rss] Notificação de troca de senh"
 
 #: classes/pref/users.php:334
 #: classes/pref/labels.php:272
-#: classes/pref/filters.php:264
-#: classes/pref/filters.php:312
-#: classes/pref/filters.php:631
-#: classes/pref/filters.php:719
-#: classes/pref/filters.php:746
+#: classes/pref/filters.php:297
+#: classes/pref/filters.php:345
+#: classes/pref/filters.php:667
+#: classes/pref/filters.php:755
+#: classes/pref/filters.php:782
 #: classes/pref/prefs.php:996
 #: classes/pref/feeds.php:1296
 #: classes/pref/feeds.php:1553
@@ -1591,7 +1592,7 @@ msgid "Details"
 msgstr "Detalhes"
 
 #: classes/pref/users.php:348
-#: classes/pref/filters.php:646
+#: classes/pref/filters.php:682
 #: plugins/instances/init.php:293
 msgid "Edit"
 msgstr "Editar"
@@ -1618,8 +1619,8 @@ msgid "No matching users found."
 msgstr "Nenhum usuário encontrado."
 
 #: classes/pref/labels.php:22
-#: classes/pref/filters.php:253
-#: classes/pref/filters.php:710
+#: classes/pref/filters.php:286
+#: classes/pref/filters.php:746
 msgid "Caption"
 msgstr "Título"
 
@@ -1656,123 +1657,125 @@ msgstr "Nenhum artigo recente que atenda este filtro foi encontrado."
 msgid "Complex expressions might not give results while testing due to issues with database server regexp implementation."
 msgstr ""
 
-#: classes/pref/filters.php:259
-#: classes/pref/filters.php:714
-#: classes/pref/filters.php:829
-msgid "Match"
-msgstr ""
-
-#: classes/pref/filters.php:273
-#: classes/pref/filters.php:321
-#: classes/pref/filters.php:728
-#: classes/pref/filters.php:755
-msgid "Add"
-msgstr ""
-
-#: classes/pref/filters.php:307
-#: classes/pref/filters.php:741
-msgid "Apply actions"
-msgstr "Aplicar ações"
-
-#: classes/pref/filters.php:357
-#: classes/pref/filters.php:770
-msgid "Enabled"
-msgstr "Ativado"
-
-#: classes/pref/filters.php:366
-#: classes/pref/filters.php:773
-#, fuzzy
-msgid "Match any rule"
-msgstr "Favoritos"
-
-#: classes/pref/filters.php:375
-#: classes/pref/filters.php:776
-#, fuzzy
-msgid "Inverse matching"
-msgstr "Favoritos"
-
-#: classes/pref/filters.php:387
-#: classes/pref/filters.php:783
-msgid "Test"
-msgstr "Teste"
-
-#: classes/pref/filters.php:420
+#: classes/pref/filters.php:177
+#: classes/pref/filters.php:456
 msgid "(inverse)"
 msgstr "(invertido)"
 
-#: classes/pref/filters.php:419
+#: classes/pref/filters.php:173
+#: classes/pref/filters.php:455
 #, php-format
 msgid "%s on %s in %s %s"
 msgstr ""
 
-#: classes/pref/filters.php:643
+#: classes/pref/filters.php:292
+#: classes/pref/filters.php:750
+#: classes/pref/filters.php:865
+msgid "Match"
+msgstr ""
+
+#: classes/pref/filters.php:306
+#: classes/pref/filters.php:354
+#: classes/pref/filters.php:764
+#: classes/pref/filters.php:791
+msgid "Add"
+msgstr ""
+
+#: classes/pref/filters.php:340
+#: classes/pref/filters.php:777
+msgid "Apply actions"
+msgstr "Aplicar ações"
+
+#: classes/pref/filters.php:390
+#: classes/pref/filters.php:806
+msgid "Enabled"
+msgstr "Ativado"
+
+#: classes/pref/filters.php:399
+#: classes/pref/filters.php:809
+#, fuzzy
+msgid "Match any rule"
+msgstr "Favoritos"
+
+#: classes/pref/filters.php:408
+#: classes/pref/filters.php:812
+#, fuzzy
+msgid "Inverse matching"
+msgstr "Favoritos"
+
+#: classes/pref/filters.php:420
+#: classes/pref/filters.php:819
+msgid "Test"
+msgstr "Teste"
+
+#: classes/pref/filters.php:679
 msgid "Combine"
 msgstr ""
 
-#: classes/pref/filters.php:649
+#: classes/pref/filters.php:685
 #: classes/pref/feeds.php:1312
 #: classes/pref/feeds.php:1326
 msgid "Reset sort order"
 msgstr "Reiniciar ordenação"
 
-#: classes/pref/filters.php:657
+#: classes/pref/filters.php:693
 #: classes/pref/feeds.php:1348
 msgid "Rescore articles"
 msgstr "Reclassificar artigos"
 
-#: classes/pref/filters.php:786
+#: classes/pref/filters.php:822
 msgid "Create"
 msgstr "Criar"
 
-#: classes/pref/filters.php:841
+#: classes/pref/filters.php:877
 msgid "Inverse regular expression matching"
 msgstr "Inverter o teste da expressão regular"
 
-#: classes/pref/filters.php:843
+#: classes/pref/filters.php:879
 msgid "on field"
 msgstr "no campo"
 
-#: classes/pref/filters.php:849
-#: js/PrefFilterTree.js:53
+#: classes/pref/filters.php:885
+#: js/PrefFilterTree.js:61
 msgid "in"
 msgstr "em"
 
-#: classes/pref/filters.php:862
+#: classes/pref/filters.php:898
 #, fuzzy
 msgid "Wiki: Filters"
 msgstr "Filtros"
 
-#: classes/pref/filters.php:867
+#: classes/pref/filters.php:903
 msgid "Save rule"
 msgstr "Salvar regra"
 
-#: classes/pref/filters.php:867
+#: classes/pref/filters.php:903
 #: js/functions.js:1021
 msgid "Add rule"
 msgstr "Adicionar regra"
 
-#: classes/pref/filters.php:890
+#: classes/pref/filters.php:926
 msgid "Perform Action"
 msgstr "Executar ação"
 
-#: classes/pref/filters.php:916
+#: classes/pref/filters.php:952
 msgid "with parameters:"
 msgstr "Com os parâmetros:"
 
-#: classes/pref/filters.php:934
+#: classes/pref/filters.php:970
 msgid "Save action"
 msgstr "Salvar ação"
 
-#: classes/pref/filters.php:934
+#: classes/pref/filters.php:970
 #: js/functions.js:1047
 msgid "Add action"
 msgstr "Adicionar ação"
 
-#: classes/pref/filters.php:957
+#: classes/pref/filters.php:993
 msgid "[No caption]"
 msgstr "[Sem título]"
 
-#: classes/pref/filters.php:959
+#: classes/pref/filters.php:995
 #, fuzzy, php-format
 msgid "%s (%d rule)"
 msgid_plural "%s (%d rules)"
@@ -1780,7 +1783,7 @@ msgstr[0] "Adicionar regra"
 msgstr[1] "Adicionar regra"
 msgstr[2] "Adicionar regra"
 
-#: classes/pref/filters.php:974
+#: classes/pref/filters.php:1010
 #, fuzzy, php-format
 msgid "%s (+%d action)"
 msgid_plural "%s (+%d actions)"
@@ -3025,7 +3028,7 @@ msgstr "Editar categoria"
 msgid "Remove category"
 msgstr "Remover categoria"
 
-#: js/PrefFilterTree.js:56
+#: js/PrefFilterTree.js:64
 msgid "Inverse"
 msgstr "Invertido"
 
