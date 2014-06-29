@@ -2,6 +2,7 @@
 	define_default('DAEMON_UPDATE_LOGIN_LIMIT', 30);
 	define_default('DAEMON_FEED_LIMIT', 500);
 	define_default('DAEMON_SLEEP_INTERVAL', 120);
+	define_default('_MIN_CACHE_IMAGE_SIZE', 1024);
 
 	function update_feedbrowser_cache() {
 
@@ -268,7 +269,7 @@
 			$force_refetch = isset($_REQUEST["force_refetch"]);
 
 			foreach ($pluginhost->get_hooks(PluginHost::HOOK_FETCH_FEED) as $plugin) {
-				$feed_data = $plugin->hook_fetch_feed($feed_data, $fetch_url, $owner_uid, $feed);
+				$feed_data = $plugin->hook_fetch_feed($feed_data, $fetch_url, $owner_uid, $feed, $last_article_timestamp, $auth_login, $auth_pass);
 			}
 
 			// try cache
@@ -1173,7 +1174,7 @@
 				if (!file_exists($local_filename)) {
 					$file_content = fetch_file_contents($src);
 
-					if ($file_content && strlen($file_content) > 1024) {
+					if ($file_content && strlen($file_content) > _MIN_CACHE_IMAGE_SIZE) {
 						file_put_contents($local_filename, $file_content);
 					}
 				}

@@ -63,10 +63,13 @@
 	function get_translations() {
 		$tr = array(
 					"auto"  => "Detect automatically",
+					"da_DA" => "Dansk",
 					"ca_CA" => "Català",
 					"cs_CZ" => "Česky",
 					"en_US" => "English",
-					"es_ES" => "Español",
+					"el_GR" => "Ελληνικά",
+					"es_ES" => "Español (España)",
+					"es_LA" => "Español",
 					"de_DE" => "Deutsch",
 					"fr_FR" => "Français",
 					"hu_HU" => "Magyar (Hungarian)",
@@ -1200,7 +1203,7 @@
 							SET unread = false, last_read = NOW() WHERE ref_id IN
 								(SELECT id FROM
 									(SELECT id FROM ttrss_entries, ttrss_user_entries WHERE ref_id = id
-										AND owner_uid = $owner_uid AND unread = true AND $date_qpart AND $match_part) as tmp)");
+										AND owner_uid = $owner_uid AND score >= 0 AND unread = true AND $date_qpart AND $match_part) as tmp)");
 					}
 
 					if ($feed == -4) {
@@ -1685,6 +1688,10 @@
 
 		if (!$contents) {
 			return array("code" => 5, "message" => $fetch_last_error);
+		}
+
+		foreach (PluginHost::getInstance()->get_hooks(PluginHost::HOOK_SUBSCRIBE_FEED) as $plugin) {
+			$contents = $plugin->hook_subscribe_feed($contents, $url, $auth_login, $auth_pass);
 		}
 
 		if (is_html($contents)) {
