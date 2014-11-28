@@ -2,7 +2,7 @@
 
 class API extends Handler {
 
-	const API_LEVEL  = 9;
+	const API_LEVEL  = 10;
 
 	const STATUS_OK  = 0;
 	const STATUS_ERR = 1;
@@ -201,6 +201,9 @@ class API extends Handler {
 			$sanitize_content = !isset($_REQUEST["sanitize"]) ||
 				sql_bool_to_bool($_REQUEST["sanitize"]);
 			$force_update = sql_bool_to_bool($_REQUEST["force_update"]);
+			$has_sandbox = sql_bool_to_bool($_REQUEST["has_sandbox"]);
+
+			$_SESSION['hasSandbox'] = $has_sandbox;
 
 			$override_order = false;
 			switch ($_REQUEST["order_by"]) {
@@ -675,7 +678,22 @@ class API extends Handler {
 					($line["unread"] != "t" && $line["unread"] != "1"));
 
 				$tags = explode(",", $line["tag_cache"]);
-				$labels = json_decode($line["label_cache"], true);
+
+				$label_cache = $line["label_cache"];
+				$labels = false;
+
+				if ($label_cache) {
+					$label_cache = json_decode($label_cache, true);
+
+					if ($label_cache) {
+						if ($label_cache["no-labels"] == 1)
+							$labels = array();
+						else
+							$labels = $label_cache;
+					}
+				}
+
+				if (!is_array($labels)) $labels = get_article_labels($line["id"]);
 
 				//if (!$tags) $tags = get_article_tags($line["id"]);
 				//if (!$labels) $labels = get_article_labels($line["id"]);
