@@ -911,8 +911,13 @@
 		foreach ($entries as $entry) {
 			if (!iframe_whitelisted($entry)) {
 				$entry->setAttribute('sandbox', 'allow-scripts');
+			} else {
+				if ($_SERVER['HTTPS'] == "on") {
+					$entry->setAttribute("src",
+						str_replace("http://", "https://",
+							$entry->getAttribute("src")));
+				}
 			}
-
 		}
 
 		$allowed_elements = array('a', 'address', 'audio', 'article', 'aside',
@@ -1975,8 +1980,8 @@
 	}
 
 	function getLastArticleId() {
-		$result = db_query("SELECT MAX(ref_id) AS id FROM ttrss_user_entries
-			WHERE owner_uid = " . $_SESSION["uid"]);
+		$result = db_query("SELECT ref_id AS id FROM ttrss_user_entries
+			WHERE owner_uid = " . $_SESSION["uid"] . " ORDER BY ref_id DESC LIMIT 1");
 
 		if (db_num_rows($result) == 1) {
 			return db_fetch_result($result, 0, "id");
