@@ -1091,20 +1091,6 @@
 					db_query("COMMIT");
 				}
 
-				if (get_pref("AUTO_ASSIGN_LABELS", $owner_uid, false)) {
-					_debug("auto-assigning labels...", $debug_enabled);
-
-					foreach ($labels as $label) {
-						$caption = preg_quote($label["caption"]);
-
-						if ($caption && preg_match("/\b$caption\b/i", "$tags_str " . strip_tags($entry_content) . " $entry_title")) {
-							if (!labels_contains_caption($article_labels, $caption)) {
-								label_add_article($entry_ref_id, $caption, $owner_uid);
-							}
-						}
-					}
-				}
-
 				_debug("article processed", $debug_enabled);
 			}
 
@@ -1169,16 +1155,8 @@
 						file_put_contents($local_filename, $file_content);
 					}
 				}
-
-				/* if (file_exists($local_filename)) {
-					$entry->setAttribute('src', SELF_URL_PATH . '/image.php?url=' .
-						base64_encode($src));
-				} */
 			}
 		}
-
-		//$node = $doc->getElementsByTagName('body')->item(0);
-		//return $doc->saveXML($node);
 	}
 
 	function expire_error_log($debug) {
