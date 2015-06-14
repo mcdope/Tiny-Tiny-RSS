@@ -422,10 +422,12 @@ function init() {
 				quickAddFeed();
 		};
 		hotkey_actions["feed_debug_update"] = function() {
-				window.open("backend.php?op=feeds&method=view&feed=" + getActiveFeedId() +
-					"&view_mode=adaptive&order_by=default&update=&m=ForceUpdate&cat=" +
-					activeFeedIsCat() + "&DevForceUpdate=1&debug=1&xdebug=1&csrf_token=" +
-					getInitParam("csrf_token"));
+			if (!activeFeedIsCat() && parseInt(getActiveFeedId()) > 0) {
+				window.open("backend.php?op=feeds&method=update_debugger&feed_id=" + getActiveFeedId() +
+				"&csrf_token=" + getInitParam("csrf_token"));
+			} else {
+				alert("You can't debug this kind of feed.");
+			}
 		};
 		hotkey_actions["feed_edit"] = function() {
 				if (activeFeedIsCat())
@@ -767,7 +769,7 @@ function parse_runtime_info(data) {
 		}
 
 		if (k == "daemon_is_running" && v != 1) {
-			notify_error("<span onclick=\"javascript:explainError(1)\">Update daemon is not running.</span>", true);
+			notify_error("<span onclick=\"explainError(1)\">Update daemon is not running.</span>", true);
 			return;
 		}
 
@@ -782,7 +784,7 @@ function parse_runtime_info(data) {
 		}
 
 		if (k == "daemon_stamp_ok" && v != 1) {
-			notify_error("<span onclick=\"javascript:explainError(3)\">Update daemon is not updating feeds.</span>", true);
+			notify_error("<span onclick=\"explainError(3)\">Update daemon is not updating feeds.</span>", true);
 			return;
 		}
 

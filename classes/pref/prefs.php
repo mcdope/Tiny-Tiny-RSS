@@ -127,21 +127,6 @@ class Pref_Prefs extends Handler_Protected {
 		}
 	}
 
-	function getHelp() {
-
-		$pref_name = $this->dbh->escape_string($_REQUEST["pn"]);
-
-		$result = $this->dbh->query("SELECT help_text FROM ttrss_prefs
-			WHERE pref_name = '$pref_name'");
-
-		if ($this->dbh->num_rows($result) > 0) {
-			$help_text = $this->dbh->fetch_result($result, 0, "help_text");
-			print $help_text;
-		} else {
-			printf(__("Unknown option: %s"), $pref_name);
-		}
-	}
-
 	function changeemail() {
 
 		$email = $this->dbh->escape_string($_POST["email"]);
@@ -570,8 +555,10 @@ class Pref_Prefs extends Handler_Protected {
 
 			} else if ($pref_name == "USER_CSS_THEME") {
 
-				$themes = array_filter(array_map("basename", glob("themes/*.css")),
-					"theme_valid");
+				$themes = array_merge(glob("themes/*.css"), glob("themes.local/*.css"));
+				$themes = array_map("basename", $themes);
+				$themes = array_filter($themes, "theme_valid");
+				asort($themes);
 
 				print_select($pref_name, $value, $themes,
 					'dojoType="dijit.form.Select"');

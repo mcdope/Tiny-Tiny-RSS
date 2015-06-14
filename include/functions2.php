@@ -1739,6 +1739,12 @@
 	 * @return string Fixed URL.
 	 */
 	function fix_url($url) {
+
+		// support schema-less urls
+		if (strpos($url, '//') === 0) {
+			$url = 'https:' . $url;
+		}
+
 		if (strpos($url, '://') === false) {
 			$url = 'http://' . $url;
 		} else if (substr($url, 0, 5) == 'feed:') {
@@ -2444,9 +2450,19 @@
 		return LABEL_BASE_INDEX - 1 + abs($feed);
 	}
 
-	function theme_valid($file) {
-		if ($file == "default.css" || $file == "night.css") return true; // needed for array_filter
-		$file = "themes/" . basename($file);
+	function get_theme_path($theme) {
+		$check = "themes/$theme";
+		if (file_exists($check)) return $check;
+
+		$check = "themes.local/$theme";
+		if (file_exists($check)) return $check;
+	}
+
+	function theme_valid($theme) {
+		if ($theme == "default.css" || $theme == "night.css") return true; // needed for array_filter
+		$file = "themes/" . basename($theme);
+
+		if (!file_exists($file)) $file = "themes.local/" . basename($theme);
 
 		if (file_exists($file) && is_readable($file)) {
 			$fh = fopen($file, "r");
@@ -2470,5 +2486,13 @@
 		return json_encode(array("error" =>
 			array("code" => $code, "message" => $message)));
 
+	}
+
+	function abs_to_rel_path($dir) {
+		$tmp = str_replace(dirname(__DIR__), "", $dir);
+
+		if (strlen($tmp) > 0 && substr($tmp, 0, 1) == "/") $tmp = substr($tmp, 1);
+
+		return $tmp;
 	}
 ?>
