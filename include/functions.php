@@ -99,8 +99,6 @@
 	require_once "lib/accept-to-gettext.php";
 	require_once "lib/gettext/gettext.inc";
 
-	require_once "lib/languagedetect/LanguageDetect.php";
-
 	function startup_gettext() {
 
 		# Get locale from Accept-Language header
@@ -322,7 +320,7 @@
 
 		// purge orphaned posts in main content table
 		$result = db_query("DELETE FROM ttrss_entries WHERE
-			(SELECT COUNT(int_id) FROM ttrss_user_entries WHERE ref_id = id) = 0");
+			NOT EXISTS (SELECT ref_id FROM ttrss_user_entries WHERE ref_id = id)");
 
 		if ($do_output) {
 			$rows = db_affected_rows($result);
@@ -914,7 +912,7 @@
 	}
 
 	function make_local_datetime($timestamp, $long, $owner_uid = false,
-					$no_smart_dt = false) {
+					$no_smart_dt = false, $eta_min = false) {
 
 		if (!$owner_uid) $owner_uid = $_SESSION['uid'];
 		if (!$timestamp) $timestamp = '1970-01-01 0:00';
@@ -948,7 +946,7 @@
 
 		if (!$no_smart_dt) {
 			return smart_date_time($user_timestamp,
-				$tz_offset, $owner_uid);
+				$tz_offset, $owner_uid, $eta_min);
 		} else {
 			if ($long)
 				$format = get_pref('LONG_DATE_FORMAT', $owner_uid);
@@ -959,10 +957,12 @@
 		}
 	}
 
-	function smart_date_time($timestamp, $tz_offset = 0, $owner_uid = false) {
+	function smart_date_time($timestamp, $tz_offset = 0, $owner_uid = false, $eta_min = false) {
 		if (!$owner_uid) $owner_uid = $_SESSION['uid'];
 
-		if (date("Y.m.d", $timestamp) == date("Y.m.d", time() + $tz_offset)) {
+		if ($eta_min && time() + $tz_offset - $timestamp < 3600) {
+			return T_sprintf("%d min", date("i", time() + $tz_offset - $timestamp));
+		} else if (date("Y.m.d", $timestamp) == date("Y.m.d", time() + $tz_offset)) {
 			return date("G:i", $timestamp);
 		} else if (date("Y", $timestamp) == date("Y", time() + $tz_offset)) {
 			$format = get_pref('SHORT_DATE_FORMAT', $owner_uid);
@@ -1743,7 +1743,7 @@
 			$feed_id = db_fetch_result($result, 0, "id");
 
 			if ($feed_id) {
-				update_rss_feed($feed_id, true);
+				set_basic_feed_info($feed_id);
 			}
 
 			return array("code" => 1);
