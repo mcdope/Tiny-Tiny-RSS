@@ -306,6 +306,7 @@
 			feed_url,auth_pass,cache_images,
 			mark_unread_on_update, owner_uid,
 			pubsub_state, auth_pass_encrypted,
+			feed_language,
 			(SELECT max(date_entered) FROM
 				ttrss_entries, ttrss_user_entries where ref_id = id AND feed_id = '$feed') AS last_article_timestamp
 			FROM ttrss_feeds WHERE id = '$feed'");
@@ -340,6 +341,8 @@
 
 		$cache_images = sql_bool_to_bool(db_fetch_result($result, 0, "cache_images"));
 		$fetch_url = db_fetch_result($result, 0, "feed_url");
+		$feed_language = db_escape_string(mb_strtolower(db_fetch_result($result, 0, "feed_language")));
+		if (!$feed_language) $feed_language = 'english';
 
 		$feed = db_escape_string($feed);
 
@@ -463,6 +466,7 @@
 			// We use local pluginhost here because we need to load different per-user feed plugins
 			$pluginhost->run_hooks(PluginHost::HOOK_FEED_PARSED, "hook_feed_parsed", $rss);
 
+			_debug("language: $feed_language", $debug_enabled);
 			_debug("processing feed data...", $debug_enabled);
 
 //			db_query("BEGIN");
@@ -769,6 +773,47 @@
 					}
 				}
 
+				/* Collect article tags here so we could filter by them: */
+
+				$article_filters = get_article_filters($filters, $article["title"],
+					$article["content"], $article["link"], 0, $article["author"],
+					$article["tags"]);
+
+				if ($debug_enabled) {
+					_debug("article filters: ", $debug_enabled);
+					if (count($article_filters) != 0) {
+						print_r($article_filters);
+					}
+				}
+
+				$plugin_filter_names = find_article_filters($article_filters, "plugin");
+				$plugin_filter_actions = $pluginhost->get_filter_actions();
+
+				if (count($plugin_filter_names) > 0) {
+					_debug("applying plugin filter actions...", $debug_enabled);
+
+					foreach ($plugin_filter_names as $pfn) {
+						list($pfclass,$pfaction) = explode(":", $pfn["param"]);
+
+						if (isset($plugin_filter_actions[$pfclass])) {
+							$plugin = $pluginhost->get_plugin($pfclass);
+
+							_debug("... $pfclass: $pfaction", $debug_enabled);
+
+							if ($plugin) {
+								$start = microtime(true);
+								$article = $plugin->hook_article_filter_action($article, $pfaction);
+
+								_debug("=== " . sprintf("%.4f (sec)", microtime(true) - $start), $debug_enabled);
+							} else {
+								_debug("??? $pfclass: plugin object not found.");
+							}
+						} else {
+							_debug("??? $pfclass: filter plugin not registered.");
+						}
+					}
+				}
+
 				$entry_tags = $article["tags"];
 				$entry_guid = db_escape_string($entry_guid);
 				$entry_title = db_escape_string($article["title"]);
@@ -792,7 +837,7 @@
 
 				$entry_content = db_escape_string($entry_content, false);
 
-				db_query("BEGIN");
+				//db_query("BEGIN");
 
 				$result = db_query("SELECT id FROM	ttrss_entries
 					WHERE (guid = '$entry_guid' OR guid = '$entry_guid_hashed')");
@@ -871,21 +916,8 @@
 						$dupcheck_qpart = "";
 					}
 
-					/* Collect article tags here so we could filter by them: */
-
-					$article_filters = get_article_filters($filters, $entry_title,
-						$entry_content, $entry_link, $entry_timestamp, $entry_author,
-						$entry_tags);
-
-					if ($debug_enabled) {
-						_debug("article filters: ", $debug_enabled);
-						if (count($article_filters) != 0) {
-							print_r($article_filters);
-						}
-					}
-
 					if (find_article_filter($article_filters, "filter")) {
-						db_query("COMMIT"); // close transaction in progress
+						//db_query("COMMIT"); // close transaction in progress
 						continue;
 					}
 
@@ -984,11 +1016,22 @@
 
 					_debug("RID: $entry_ref_id, IID: $entry_int_id", $debug_enabled);
 
+					if (DB_TYPE == "pgsql") {
+					   $tsvector_combined = db_escape_string(mb_substr($entry_title . ' ' . strip_tags(str_replace('<', ' <', $entry_content)),
+							0, 1000000));
+
+						$tsvector_qpart = "tsvector_combined = to_tsvector('$feed_language', '$tsvector_combined'),";
+
+					} else {
+						$tsvector_qpart = "";
+					}
+
 					db_query("UPDATE ttrss_entries
 						SET title = '$entry_title',
 							content = '$entry_content',
 							content_hash = '$entry_current_hash',
 							updated = '$entry_timestamp_fmt',
+							$tsvector_qpart
 							num_comments = '$num_comments',
 							plugin_data = '$entry_plugin_data',
 							author = '$entry_author',
@@ -1005,7 +1048,7 @@
 					}
 				}
 
-				db_query("COMMIT");
+				//db_query("COMMIT");
 
 				_debug("assigning labels [other]...", $debug_enabled);
 
@@ -1039,7 +1082,7 @@
 					print_r($enclosures);
 				}
 
-				db_query("BEGIN");
+				//db_query("BEGIN");
 
 //				debugging
 //				db_query("DELETE FROM ttrss_enclosures WHERE post_id = '$entry_ref_id'");
@@ -1062,7 +1105,7 @@
 					}
 				}
 
-				db_query("COMMIT");
+				//db_query("COMMIT");
 
 				// check for manual tags (we have to do it here since they're loaded from filters)
 
@@ -1106,7 +1149,7 @@
 
 				if (count($filtered_tags) > 0) {
 
-					db_query("BEGIN");
+					//db_query("BEGIN");
 
 					foreach ($filtered_tags as $tag) {
 
@@ -1139,7 +1182,7 @@
 						SET tag_cache = '$tags_str' WHERE ref_id = '$entry_ref_id'
 						AND owner_uid = $owner_uid");
 
-					db_query("COMMIT");
+					//db_query("COMMIT");
 				}
 
 				_debug("article processed", $debug_enabled);
@@ -1205,6 +1248,8 @@
 					if ($file_content && strlen($file_content) > _MIN_CACHE_IMAGE_SIZE) {
 						file_put_contents($local_filename, $file_content);
 					}
+				} else {
+					touch($local_filename);
 				}
 			}
 		}

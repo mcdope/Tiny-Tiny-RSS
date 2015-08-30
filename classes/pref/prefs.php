@@ -622,6 +622,8 @@ class Pref_Prefs extends Handler_Protected {
 				$cert_serial = htmlspecialchars(get_ssl_certificate_id());
 				$has_serial = ($cert_serial) ? "false" : "true";
 
+				print "<br/>";
+
 				print " <button dojoType=\"dijit.form.Button\" disabled=\"$has_serial\"
 					onclick=\"insertSSLserial('$cert_serial')\">" .
 					__('Register') . "</button>";
@@ -750,7 +752,7 @@ class Pref_Prefs extends Handler_Protected {
 		foreach ($tmppluginhost->get_plugins() as $name => $plugin) {
 			$about = $plugin->about();
 
-			if ($about[3] && strpos($name, "example") === FALSE) {
+			if ($about[3]) {
 				if (in_array($name, $system_enabled)) {
 					$checked = "checked='1'";
 				} else {
@@ -800,7 +802,7 @@ class Pref_Prefs extends Handler_Protected {
 		foreach ($tmppluginhost->get_plugins() as $name => $plugin) {
 			$about = $plugin->about();
 
-			if (!$about[3] && strpos($name, "example") === FALSE) {
+			if (!$about[3]) {
 
 				if (in_array($name, $system_enabled)) {
 					$checked = "checked='1'";
@@ -973,7 +975,7 @@ class Pref_Prefs extends Handler_Protected {
 
 		print "<table width='100%'><tr><td>";
 		print "<textarea dojoType=\"dijit.form.SimpleTextarea\"
-			style='font-size : 12px; width : 100%; height: 200px;'
+			style='font-size : 12px; width : 98%; height: 200px;'
 			placeHolder='body#ttrssMain { font-size : 14px; };'
 			name='value'>$value</textarea>";
 		print "</td></tr></table>";

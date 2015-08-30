@@ -80,10 +80,10 @@ class Pref_Filters extends Handler_Protected {
 
 				if (isset($rule["feed_id"]) && $rule['feed_id'] > 0) {
 					array_push($scope_qparts, "feed_id = " . $rule["feed_id"]);
-				}
-
-				if (isset($rule["cat_id"])) {
+				} else if (isset($rule["cat_id"])) {
 					array_push($scope_qparts, "cat_id = " . $rule["cat_id"]);
+				} else {
+					array_push($scope_qparts, "true");
 				}
 
 				array_push($filter["rules"], $rule);
@@ -106,7 +106,7 @@ class Pref_Filters extends Handler_Protected {
 		print "<div class=\"filterTestHolder\">";
 		print "<table width=\"100%\" cellspacing=\"0\" id=\"prefErrorFeedList\">";
 
-		$glue = $filter['match_any_rule'] ? " AND " :  "OR ";
+		$glue = $filter['match_any_rule'] ? " OR " :  " AND ";
 		$scope_qpart = join($glue, $scope_qparts);
 
 		if (!$scope_qpart) $scope_qpart = "true";
@@ -518,6 +518,21 @@ class Pref_Filters extends Handler_Protected {
 		if ($action["action_id"] == 4 || $action["action_id"] == 6 ||
 			$action["action_id"] == 7)
 				$title .= ": " . $action["action_param"];
+
+		if ($action["action_id"] == 9) {
+			list ($pfclass, $pfaction) = explode(":", $action["action_param"]);
+
+			$filter_actions = PluginHost::getInstance()->get_filter_actions();
+
+			foreach ($filter_actions as $fclass => $factions) {
+				foreach ($factions as $faction) {
+					if ($pfaction == $faction["action"] && $pfclass == $fclass) {
+						$title .= ": " . $fclass . ": " . $faction["description"];
+						break;
+					}
+				}
+			}
+		}
 
 		return $title;
 	}
@@ -989,16 +1004,18 @@ class Pref_Filters extends Handler_Protected {
 
 		print "</select>";
 
-		$param_box_hidden = ($action_id == 7 || $action_id == 4 || $action_id == 6) ?
+		$param_box_hidden = ($action_id == 7 || $action_id == 4 || $action_id == 6 || $action_id == 9) ?
 			"" : "display : none";
 
 		$param_hidden = ($action_id == 4 || $action_id == 6) ?
 			"" : "display : none";
 
 		$label_param_hidden = ($action_id == 7) ?	"" : "display : none";
+		$plugin_param_hidden = ($action_id == 9) ?	"" : "display : none";
 
 		print "<span id=\"filterDlg_paramBox\" style=\"$param_box_hidden\">";
-		print " " . __("with parameters:") . " ";
+		print " ";
+		//print " " . __("with parameters:") . " ";
 		print "<input dojoType=\"dijit.form.TextBox\"
 			id=\"filterDlg_actionParam\" style=\"$param_hidden\"
 			name=\"action_param\" value=\"$action_param\">";
@@ -1006,6 +1023,30 @@ class Pref_Filters extends Handler_Protected {
 		print_label_select("action_param_label", $action_param,
 			"id=\"filterDlg_actionParamLabel\" style=\"$label_param_hidden\"
 			dojoType=\"dijit.form.Select\"");
+
+		$filter_actions = PluginHost::getInstance()->get_filter_actions();
+		$filter_action_hash = array();
+
+		foreach ($filter_actions as $fclass => $factions) {
+			foreach ($factions as $faction) {
+
+				$filter_action_hash[$fclass . ":" . $faction["action"]] =
+					$fclass . ": " . $faction["description"];
+			}
+		}
+
+		if (count($filter_action_hash) == 0) {
+			$filter_plugin_disabled = "disabled";
+
+			$filter_action_hash["no-data"] = __("No actions available");
+
+		} else {
+			$filter_plugin_disabled = "";
+		}
+
+		print_select_hash("filterDlg_actionParamPlugin", $action_param, $filter_action_hash,
+			"style=\"$plugin_param_hidden\" dojoType=\"dijit.form.Select\" $filter_plugin_disabled",
+			"action_param_plugin");
 
 		print "</span>";
 
@@ -1029,19 +1070,21 @@ class Pref_Filters extends Handler_Protected {
 	private function getFilterName($id) {
 
 		$result = $this->dbh->query(
-			"SELECT title,COUNT(DISTINCT r.id) AS num_rules,COUNT(DISTINCT a.id) AS num_actions
+			"SELECT title,match_any_rule,COUNT(DISTINCT r.id) AS num_rules,COUNT(DISTINCT a.id) AS num_actions
 				FROM ttrss_filters2 AS f LEFT JOIN ttrss_filters2_rules AS r
 					ON (r.filter_id = f.id)
 						LEFT JOIN ttrss_filters2_actions AS a
-							ON (a.filter_id = f.id) WHERE f.id = '$id' GROUP BY f.title");
+							ON (a.filter_id = f.id) WHERE f.id = '$id' GROUP BY f.title, f.match_any_rule");
 
 		$title = $this->dbh->fetch_result($result, 0, "title");
 		$num_rules = $this->dbh->fetch_result($result, 0, "num_rules");
 		$num_actions = $this->dbh->fetch_result($result, 0, "num_actions");
+		$match_any_rule = sql_bool_to_bool($this->dbh->fetch_result($result, 0, "match_any_rule"));
 
 		if (!$title) $title = __("[No caption]");
 
 		$title = sprintf(_ngettext("%s (%d rule)", "%s (%d rules)", $num_rules), $title, $num_rules);
+
 
 		$result = $this->dbh->query(
 			"SELECT * FROM ttrss_filters2_actions WHERE filter_id = '$id' ORDER BY id LIMIT 1");
@@ -1054,6 +1097,8 @@ class Pref_Filters extends Handler_Protected {
 
 			$num_actions -= 1;
 		}
+
+		if ($match_any_rule) $title .= " (" . __("matches any rule") . ")";
 
 		if ($num_actions > 0)
 			$actions = sprintf(_ngettext("%s (+%d action)", "%s (+%d actions)", $num_actions), $actions, $num_actions);

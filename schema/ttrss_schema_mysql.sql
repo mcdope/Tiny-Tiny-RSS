@@ -127,6 +127,7 @@ create table ttrss_feeds (id integer not null auto_increment primary key,
 	view_settings varchar(250) not null default '',
 	pubsub_state integer not null default 0,
 	favicon_last_checked datetime default null,
+	feed_language varchar(100) not null default '',
 	foreign key (owner_uid) references ttrss_users(id) ON DELETE CASCADE,
 	foreign key (cat_id) references ttrss_feed_categories(id) ON DELETE SET NULL,
 	foreign key (parent_feed) references ttrss_feeds(id) ON DELETE SET NULL) ENGINE=InnoDB DEFAULT CHARSET=UTF8;
@@ -231,6 +232,9 @@ insert into ttrss_filter_actions (id,name,description) values (7, 'label',
 insert into ttrss_filter_actions (id,name,description) values (8, 'stop',
 	'Stop / Do nothing');
 
+insert into ttrss_filter_actions (id,name,description) values (9, 'plugin',
+	'Invoke plugin');
+
 create table ttrss_filters2(id integer primary key auto_increment,
 	owner_uid integer not null,
 	match_any_rule boolean not null default false,
@@ -277,7 +281,7 @@ create table ttrss_tags (id integer primary key auto_increment,
 
 create table ttrss_version (schema_version int not null) ENGINE=InnoDB DEFAULT CHARSET=UTF8;
 
-insert into ttrss_version values (127);
+insert into ttrss_version values (129);
 
 create table ttrss_enclosures (id integer primary key auto_increment,
 	content_url text not null,

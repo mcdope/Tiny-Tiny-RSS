@@ -86,13 +86,13 @@ class Feeds extends Handler_Protected {
 		$reply .= "<span class=\"main\">";
 		$reply .= "<span id='selected_prompt'></span>";
 
-		$reply .= "
+		$reply .= "<span class=\"sel_links\">
 			<a href=\"#\" onclick=\"$sel_all_link\">".__('All')."</a>,
 			<a href=\"#\" onclick=\"$sel_unread_link\">".__('Unread')."</a>,
 			<a href=\"#\" onclick=\"$sel_inv_link\">".__('Invert')."</a>,
 			<a href=\"#\" onclick=\"$sel_none_link\">".__('None')."</a></li>";
 
-		$reply .= " ";
+		$reply .= "</span> ";
 
 		$reply .= "<select dojoType=\"dijit.form.Select\"
 			onchange=\"headlineActionsChange(this)\">";
@@ -202,6 +202,7 @@ class Feeds extends Handler_Protected {
 		}
 
 		@$search = $this->dbh->escape_string($_REQUEST["query"]);
+		@$search_language = $this->dbh->escape_string($_REQUEST["search_language"]); // PGSQL only
 
 		if ($search) {
 			$disable_cache = true;
@@ -247,6 +248,7 @@ class Feeds extends Handler_Protected {
 				"view_mode" => $view_mode,
 				"cat_view" => $cat_view,
 				"search" => $search,
+				"search_language" => $search_language,
 				"override_order" => $override_order,
 				"offset" => $offset,
 				"include_children" => $include_children,
@@ -453,7 +455,7 @@ class Feeds extends Handler_Protected {
 
 							$reply['content'] .= "<div id='FTITLE-$feed_id' class='cdmFeedTitle'>".
 								"<div style='float : right'>$feed_icon_img</div>".
-								"<a class='title' href=\"#\" onclick=\"viewfeed($feed_id)\">".
+								"<a class='title' href=\"#\" onclick=\"viewfeed({feed:$feed_id})\">".
 								$line["feed_title"]."</a>
 								$vf_catchup_link</div>";
 
@@ -498,7 +500,7 @@ class Feeds extends Handler_Protected {
 						if (@$line["feed_title"]) {
 							$rgba = @$rgba_cache[$feed_id];
 
-							$reply['content'] .= "<span class=\"hlFeed\"><a style=\"background : rgba($rgba, 0.3)\" href=\"#\" onclick=\"viewfeed($feed_id)\">".
+							$reply['content'] .= "<span class=\"hlFeed\"><a style=\"background : rgba($rgba, 0.3)\" href=\"#\" onclick=\"viewfeed({feed:$feed_id})\">".
 								truncate_string($line["feed_title"],30)."</a></span>";
 						}
 					}
@@ -515,7 +517,7 @@ class Feeds extends Handler_Protected {
 
 					if ($line["feed_title"] && !$vfeed_group_enabled) {
 
-						$reply['content'] .= "<span onclick=\"viewfeed($feed_id)\"
+						$reply['content'] .= "<span onclick=\"viewfeed({feed:$feed_id})\"
 							style=\"cursor : pointer\"
 							title=\"".htmlspecialchars($line['feed_title'])."\">
 							$feed_icon_img</span>";
@@ -558,7 +560,7 @@ class Feeds extends Handler_Protected {
 
 							$reply['content'] .= "<div id='FTITLE-$feed_id' class='cdmFeedTitle'>".
 								"<div style=\"float : right\">$feed_icon_img</div>".
-								"<a href=\"#\" class='title' onclick=\"viewfeed($feed_id)\">".
+								"<a href=\"#\" class='title' onclick=\"viewfeed({feed:$feed_id})\">".
 								$line["feed_title"]."</a> $vf_catchup_link</div>";
 
 						}
@@ -622,7 +624,7 @@ class Feeds extends Handler_Protected {
 
 							$reply['content'] .= "<div class=\"hlFeed\">
 								<a href=\"#\" style=\"background-color: rgba($rgba,0.3)\"
-								onclick=\"viewfeed($feed_id)\">".
+								onclick=\"viewfeed({feed:$feed_id})\">".
 								truncate_string($line["feed_title"],30)."</a>
 							</div>";
 						}
@@ -637,7 +639,7 @@ class Feeds extends Handler_Protected {
 					if (!get_pref("VFEED_GROUP_BY_FEED") && $line["feed_title"]) {
 						$reply['content'] .= "<span style=\"cursor : pointer\"
 							title=\"".htmlspecialchars($line["feed_title"])."\"
-							onclick=\"viewfeed($feed_id)\">$feed_icon_img</span>";
+							onclick=\"viewfeed({feed:$feed_id})\">$feed_icon_img</span>";
 					}
 					$reply['content'] .= "</div>";
 
@@ -697,8 +699,11 @@ class Feeds extends Handler_Protected {
 
 					$reply['content'] .= "</span>";
 
-					$always_display_enclosures = sql_bool_to_bool($line["always_display_enclosures"]);
+					$reply['content'] .= "</div>";
 
+					$reply['content'] .= "<div class=\"cdmIntermediate\">";
+
+					$always_display_enclosures = sql_bool_to_bool($line["always_display_enclosures"]);
 					$reply['content'] .= format_article_enclosures($id, $always_display_enclosures, $line["content"], sql_bool_to_bool($line["hide_images"]));
 
 					$reply['content'] .= "</div>";
@@ -710,6 +715,8 @@ class Feeds extends Handler_Protected {
 					}
 
 					$tags_str = format_tags_string($tags, $id);
+
+					$reply['content'] .= "<span class='left'>";
 
 					$reply['content'] .= "<img src='images/tag.png' alt='Tags' title='Tags'>
 						<span id=\"ATSTR-$id\">$tags_str</span>
@@ -737,7 +744,8 @@ class Feeds extends Handler_Protected {
 
 					if ($entry_comments) $reply['content'] .= "&nbsp;($entry_comments)";
 
-					$reply['content'] .= "<div style=\"float : right\">";
+					$reply['content'] .= "</span>";
+					$reply['content'] .= "<div>";
 
 //					$reply['content'] .= "$marked_pic";
 //					$reply['content'] .= "$published_pic";
@@ -1142,6 +1150,12 @@ class Feeds extends Handler_Protected {
 			required=\"1\" name=\"query\" type=\"search\" value=''>";
 
 		print "<hr/><span style='float : right'>".T_sprintf('in %s', getFeedTitle($active_feed_id, $is_cat))."</span>";
+
+		if (DB_TYPE == "pgsql") {
+			print "<hr/>";
+			print_select("search_language", "", Pref_Feeds::$feed_languages,
+				"dojoType='dijit.form.Select' title=\"".__('Used for word stemming')."\"");
+		}
 
 		print "</div>";
 

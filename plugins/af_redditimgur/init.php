@@ -43,9 +43,7 @@ class Af_RedditImgur extends Plugin {
 		print "<input dojoType=\"dijit.form.TextBox\" style=\"display : none\" name=\"method\" value=\"save\">";
 		print "<input dojoType=\"dijit.form.TextBox\" style=\"display : none\" name=\"plugin\" value=\"af_redditimgur\">";
 
-		print "<h3>" . __("Global settings") . "</h3>";
-
-		print_notice("Uses Readability (full-text-rss) implementation by <a target='_blank' href='https://bitbucket.org/fivefilters/'>FiveFilters.org</a>");
+		print "<p>" . __("Uses Readability (full-text-rss) implementation by <a target='_blank' href='https://bitbucket.org/fivefilters/'>FiveFilters.org</a>");
 		print "<p/>";
 
 		print "<input dojoType=\"dijit.form.CheckBox\" id=\"enable_readability\"
@@ -95,7 +93,7 @@ class Af_RedditImgur extends Plugin {
 						if ($tmpdoc) {
 							$tmpxpath = new DOMXPath($tmpdoc);
 
-							$source_meta = $tmpxpath->query("//meta[@property='og:video']")->item(0);
+							$source_meta = $tmpxpath->query("//meta[@name='twitter:player:stream' and contains(@content, '.mp4')]")->item(0);
 							$poster_meta = $tmpxpath->query("//meta[@property='og:image' and contains(@content,'thumbs.gfycat.com')]")->item(0);
 
 							if ($source_meta) {

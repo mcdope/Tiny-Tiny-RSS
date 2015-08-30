@@ -1,6 +1,6 @@
 <?php
 	define('EXPECTED_CONFIG_VERSION', 26);
-	define('SCHEMA_VERSION', 127);
+	define('SCHEMA_VERSION', 129);
 
 	define('LABEL_BASE_INDEX', -1024);
 	define('PLUGIN_FEED_BASE_INDEX', -128);
@@ -248,27 +248,13 @@
 		if (!$purge_unread) $query_limit = " unread = false AND ";
 
 		if (DB_TYPE == "pgsql") {
-			$pg_version = get_pgsql_version();
-
-			if (preg_match("/^7\./", $pg_version) || preg_match("/^8\.0/", $pg_version)) {
-
-				$result = db_query("DELETE FROM ttrss_user_entries WHERE
-					ttrss_entries.id = ref_id AND
-					marked = false AND
-					feed_id = '$feed_id' AND
-					$query_limit
-					ttrss_entries.date_updated < NOW() - INTERVAL '$purge_interval days'");
-
-			} else {
-
-				$result = db_query("DELETE FROM ttrss_user_entries
-					USING ttrss_entries
-					WHERE ttrss_entries.id = ref_id AND
-					marked = false AND
-					feed_id = '$feed_id' AND
-					$query_limit
-					ttrss_entries.date_updated < NOW() - INTERVAL '$purge_interval days'");
-			}
+			$result = db_query("DELETE FROM ttrss_user_entries
+				USING ttrss_entries
+				WHERE ttrss_entries.id = ref_id AND
+				marked = false AND
+				feed_id = '$feed_id' AND
+				$query_limit
+				ttrss_entries.date_updated < NOW() - INTERVAL '$purge_interval days'");
 
 		} else {
 
@@ -387,7 +373,6 @@
 			curl_setopt($ch, CURLOPT_MAXREDIRS, 20);
 			curl_setopt($ch, CURLOPT_BINARYTRANSFER, true);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 			curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
 			curl_setopt($ch, CURLOPT_USERAGENT, $useragent ? $useragent :
 				SELF_USER_AGENT);
@@ -459,14 +444,19 @@
 			}
 
 			if (!$post_query && $timestamp) {
-				$context = stream_context_create(array(
-					'http' => array(
-						'method' => 'GET',
-						'header' => "If-Modified-Since: ".gmdate("D, d M Y H:i:s \\G\\M\\T\r\n", $timestamp)
-					)));
+				 $context = stream_context_create(array(
+					  'http' => array(
+							'method' => 'GET',
+							'protocol_version'=> 1.1,
+							'header' => "If-Modified-Since: ".gmdate("D, d M Y H:i:s \\G\\M\\T\r\n", $timestamp)
+					  )));
 			} else {
-				$context = NULL;
-			}
+				 $context = stream_context_create(array(
+					  'http' => array(
+							'method' => 'GET',
+							'protocol_version'=> 1.1
+					  )));
+			} 
 
 			$old_error = error_get_last();
 
@@ -594,8 +584,10 @@
 		}
 	}
 
-	function print_select($id, $default, $values, $attributes = "") {
-		print "<select name=\"$id\" id=\"$id\" $attributes>";
+	function print_select($id, $default, $values, $attributes = "", $name = "") {
+		if (!$name) $name = $id;
+
+		print "<select name=\"$name\" id=\"$id\" $attributes>";
 		foreach ($values as $v) {
 			if ($v == $default)
 				$sel = "selected=\"1\"";
@@ -609,8 +601,10 @@
 		print "</select>";
 	}
 
-	function print_select_hash($id, $default, $values, $attributes = "") {
-		print "<select name=\"$id\" id='$id' $attributes>";
+	function print_select_hash($id, $default, $values, $attributes = "", $name = "") {
+		if (!$name) $name = $id;
+
+		print "<select name=\"$name\" id='$id' $attributes>";
 		foreach (array_keys($values) as $v) {
 			if ($v == $default)
 				$sel = 'selected="selected"';
@@ -738,7 +732,7 @@
 
 				$_SESSION["name"] = db_fetch_result($result, 0, "login");
 				$_SESSION["access_level"] = db_fetch_result($result, 0, "access_level");
-				$_SESSION["csrf_token"] = uniqid(rand(), true);
+				$_SESSION["csrf_token"] = uniqid_short();
 
 				db_query("UPDATE ttrss_users SET last_login = NOW() WHERE id = " .
 					$_SESSION["uid"]);
@@ -768,7 +762,7 @@
 			$_SESSION["auth_module"] = false;
 
 			if (!$_SESSION["csrf_token"]) {
-				$_SESSION["csrf_token"] = uniqid(rand(), true);
+				$_SESSION["csrf_token"] = uniqid_short();
 			}
 
 			$_SESSION["ip_address"] = $_SERVER["REMOTE_ADDR"];
@@ -1994,6 +1988,10 @@
 		} else {
 			return $id;
 		}
+	}
+
+	function uniqid_short() {
+		return uniqid(base_convert(rand(), 10, 36));
 	}
 
 	// TODO: less dumb splitting
