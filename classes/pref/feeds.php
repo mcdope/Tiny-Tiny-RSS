@@ -297,7 +297,7 @@ class Pref_Feeds extends Handler_Protected {
 		if ($_REQUEST['mode'] != 2) {
 			$fl['items'] = array($root);
 		} else {
-			$fl['items'] =& $root['items'];
+			$fl['items'] = $root['items'];
 		}
 
 		return $fl;
@@ -410,7 +410,7 @@ class Pref_Feeds extends Handler_Protected {
 						if (isset($item['items']['_reference'])) {
 							$data_map[$item['id']] = array($item['items']);
 						} else {
-							$data_map[$item['id']] =& $item['items'];
+							$data_map[$item['id']] = $item['items'];
 						}
 					}
 				if ($item['id'] == 'root') {
@@ -1461,8 +1461,10 @@ class Pref_Feeds extends Handler_Protected {
 
 		print "<hr>";
 
+		$opml_export_filename = "TinyTinyRSS_".date("Y-m-d").".opml";
+
 		print "<p>" . __('Filename:') .
-            " <input type=\"text\" id=\"filename\" value=\"TinyTinyRSS.opml\" />&nbsp;" .
+            " <input type=\"text\" id=\"filename\" value=\"$opml_export_filename\" />&nbsp;" .
 				__('Include settings') . "<input type=\"checkbox\" id=\"settings\" checked=\"1\"/>";
 
 		print "</p><button dojoType=\"dijit.form.Button\"
