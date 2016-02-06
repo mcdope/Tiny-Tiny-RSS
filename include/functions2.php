@@ -972,14 +972,14 @@
 		$allowed_elements = array('a', 'address', 'audio', 'article', 'aside',
 			'b', 'bdi', 'bdo', 'big', 'blockquote', 'body', 'br',
 			'caption', 'cite', 'center', 'code', 'col', 'colgroup',
-			'data', 'dd', 'del', 'details', 'div', 'dl', 'font',
+			'data', 'dd', 'del', 'details', 'description', 'div', 'dl', 'font',
 			'dt', 'em', 'footer', 'figure', 'figcaption',
 			'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'html', 'i',
 			'img', 'ins', 'kbd', 'li', 'main', 'mark', 'nav', 'noscript',
 			'ol', 'p', 'pre', 'q', 'ruby', 'rp', 'rt', 's', 'samp', 'section',
 			'small', 'source', 'span', 'strike', 'strong', 'sub', 'summary',
 			'sup', 'table', 'tbody', 'td', 'tfoot', 'th', 'thead', 'time',
-			'tr', 'track', 'tt', 'u', 'ul', 'var', 'wbr', 'video' );
+			'tr', 'track', 'tt', 'u', 'ul', 'var', 'wbr', 'video', 'xml:namespace' );
 
 		if ($_SESSION['hasSandbox']) $allowed_elements[] = 'iframe';
 
@@ -1121,7 +1121,8 @@
 			$result = db_query("SELECT tag_cache FROM ttrss_user_entries
 				WHERE ref_id = '$id' AND owner_uid = $owner_uid");
 
-			$tag_cache = db_fetch_result($result, 0, "tag_cache");
+			if (db_num_rows($result) != 0)
+				$tag_cache = db_fetch_result($result, 0, "tag_cache");
 		}
 
 		if ($tag_cache) {
@@ -1156,7 +1157,7 @@
 
 	function tag_is_valid($tag) {
 		if ($tag == '') return false;
-		if (preg_match("/^[0-9]*$/", $tag)) return false;
+		if (is_numeric($tag)) return false;
 		if (mb_strlen($tag) > 250) return false;
 
 		if (!$tag) return false;
@@ -1409,7 +1410,7 @@
 			if ($line["orig_feed_id"]) {
 
 				$tmp_result = db_query("SELECT * FROM ttrss_archived_feeds
-					WHERE id = ".$line["orig_feed_id"]);
+					WHERE id = ".$line["orig_feed_id"] . " AND owner_uid = " . $_SESSION["uid"]);
 
 				if (db_num_rows($tmp_result) != 0) {
 
