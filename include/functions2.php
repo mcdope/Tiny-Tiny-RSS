@@ -89,6 +89,7 @@
 				"feed_edit" => __("Edit feed"),
 				"feed_catchup" => __("Mark as read"),
 				"feed_reverse" => __("Reverse headlines"),
+				"feed_toggle_vgroup" => __("Toggle headline grouping"),
 				"feed_debug_update" => __("Debug feed update"),
 				"feed_debug_viewfeed" => __("Debug viewfeed()"),
 				"catchup_all" => __("Mark all feeds as read"),
@@ -158,6 +159,7 @@
 				"f e" => "feed_edit",
 				"f q" => "feed_catchup",
 				"f x" => "feed_reverse",
+				"f g" => "feed_toggle_vgroup",
 				"f *d" => "feed_debug_update",
 				"f *g" => "feed_debug_viewfeed",
 				"f *c" => "toggle_combined_mode",
@@ -1062,6 +1064,10 @@
 						array_push($attrs_to_remove, $attr);
 					}
 
+					if ($attr->nodeName == 'href' && stripos($attr->value, 'javascript:') === 0) {
+						array_push($attrs_to_remove, $attr);
+					}
+
 					if (in_array($attr->nodeName, $disallowed_attributes)) {
 						array_push($attrs_to_remove, $attr);
 					}
@@ -1372,9 +1378,7 @@
 			}
 
 			if ($zoom_mode) {
-				$feed_title = "<a href=\"".htmlspecialchars($line["site_url"]).
-					"\" target=\"_blank\">".
-					htmlspecialchars($line["feed_title"])."</a>";
+				$feed_title = htmlspecialchars($line["feed_title"]);
 
 				$rv['content'] .= "<div class=\"postFeedTitle\">$feed_title</div>";
 
@@ -2442,5 +2446,21 @@
 		if (strlen($tmp) > 0 && substr($tmp, 0, 1) == "/") $tmp = substr($tmp, 1);
 
 		return $tmp;
+	}
+
+	function get_upload_error_message($code) {
+
+		$errors = array(
+			0 => __('There is no error, the file uploaded with success'),
+			1 => __('The uploaded file exceeds the upload_max_filesize directive in php.ini'),
+			2 => __('The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form'),
+			3 => __('The uploaded file was only partially uploaded'),
+			4 => __('No file was uploaded'),
+			6 => __('Missing a temporary folder'),
+			7 => __('Failed to write file to disk.'),
+			8 => __('A PHP extension stopped the file upload.'),
+		);
+
+		return $errors[$code];
 	}
 ?>
