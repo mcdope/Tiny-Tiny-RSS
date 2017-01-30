@@ -900,7 +900,7 @@
 					$entry->setAttribute('href',
 						rewrite_relative_url($site_url, $entry->getAttribute('href')));
 
-					$entry->setAttribute('rel', 'noreferrer');
+					$entry->setAttribute('rel', 'noopener noreferrer');
 				}
 
 				if ($entry->hasAttribute('src')) {
@@ -975,10 +975,10 @@
 			}
 		}
 
-		$allowed_elements = array('a', 'address', 'audio', 'article', 'aside',
+		$allowed_elements = array('a', 'address', 'acronym', 'audio', 'article', 'aside',
 			'b', 'bdi', 'bdo', 'big', 'blockquote', 'body', 'br',
 			'caption', 'cite', 'center', 'code', 'col', 'colgroup',
-			'data', 'dd', 'del', 'details', 'description', 'div', 'dl', 'font',
+			'data', 'dd', 'del', 'details', 'description', 'dfn', 'div', 'dl', 'font',
 			'dt', 'em', 'footer', 'figure', 'figcaption',
 			'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'html', 'i',
 			'img', 'ins', 'kbd', 'li', 'main', 'mark', 'nav', 'noscript',
@@ -1296,6 +1296,7 @@
 			num_comments,
 			tag_cache,
 			author,
+			guid,
 			orig_feed_id,
 			note
 			FROM ttrss_entries,ttrss_user_entries
@@ -1316,7 +1317,7 @@
 				$line = $p->hook_render_article($line);
 			}
 
-			$num_comments = $line["num_comments"];
+			$num_comments = (int) $line["num_comments"];
 			$entry_comments = "";
 
 			if ($num_comments > 0) {
@@ -1776,6 +1777,16 @@
 			$url .= '/';
 		}
 
+		//convert IDNA hostname to punycode if possible
+		if (function_exists("idn_to_ascii")) {
+			$parts = parse_url($url);
+			if (mb_detect_encoding($parts['host']) != 'ASCII')
+			{
+				$parts['host'] = idn_to_ascii($parts['host']);
+				$url = build_url($parts);
+			}
+		}
+
 		if ($url != "http:///")
 			return $url;
 		else
@@ -1934,7 +1945,8 @@
 
 				if (!$ctype) $ctype = __("unknown type");
 
-				$filename = substr($url, strrpos($url, "/")+1);
+				//$filename = substr($url, strrpos($url, "/")+1);
+				$filename = basename($url);
 
 				$player = format_inline_player($url, $ctype);
 
@@ -2015,12 +2027,17 @@
 
 			foreach ($entries as $entry) {
 				if ($entry["title"])
-					$title = "&mdash; " . truncate_string($entry["title"], 30);
+					$title = " &mdash; " . truncate_string($entry["title"], 30);
 				else
 					$title = "";
 
+				if ($entry["filename"])
+					$filename = truncate_middle(htmlspecialchars($entry["filename"]), 60);
+				else
+					$filename = "";
+
 				$rv .= "<div onclick='window.open(\"".htmlspecialchars($entry["url"])."\")'
-					dojoType=\"dijit.MenuItem\">".htmlspecialchars($entry["filename"])."$title</div>";
+					dojoType=\"dijit.MenuItem\">".$filename . $title."</div>";
 
 			};
 
@@ -2411,7 +2428,10 @@
 	}
 
 	function theme_valid($theme) {
-		if ($theme == "default.css" || $theme == "night.css") return true; // needed for array_filter
+		$bundled_themes = [ "default.php", "night.css", "compact.css" ];
+		
+		if (in_array($theme, $bundled_themes)) return true;
+
 		$file = "themes/" . basename($theme);
 
 		if (!file_exists($file)) $file = "themes.local/" . basename($theme);

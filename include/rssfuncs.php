@@ -254,7 +254,7 @@
 		$auth_login = db_fetch_result($result, 0, "auth_login");
 		$auth_pass = db_fetch_result($result, 0, "auth_pass");
 
-		if ($auth_pass_encrypted) {
+		if ($auth_pass_encrypted && function_exists("mcrypt_decrypt")) {
 			require_once "crypt.php";
 			$auth_pass = decrypt_string($auth_pass);
 		}
@@ -263,7 +263,7 @@
 
 		$feed_data = fetch_file_contents($fetch_url, false,
 			$auth_login, $auth_pass, false,
-			FEED_FETCH_TIMEOUT_TIMEOUT,
+			FEED_FETCH_TIMEOUT,
 			0);
 
 		global $fetch_curl_used;
@@ -311,6 +311,13 @@
 
 		$result = db_query("SELECT title FROM ttrss_feeds
 			WHERE id = '$feed'");
+
+		if (db_num_rows($result) == 0) {
+			_debug("feed $feed NOT FOUND/SKIPPED", $debug_enabled);
+			user_error("Attempt to update unknown/invalid feed $feed", E_USER_WARNING);
+			return false;
+		}
+
 		$title = db_fetch_result($result, 0, "title");
 
 		// feed was batch-subscribed or something, we need to get basic info
@@ -327,12 +334,6 @@
 			feed_language
 			FROM ttrss_feeds WHERE id = '$feed'");
 
-		if (db_num_rows($result) == 0) {
-			_debug("feed $feed NOT FOUND/SKIPPED", $debug_enabled);
-			user_error("Attempt to update unknown/invalid feed $feed", E_USER_WARNING);
-			return false;
-		}
-
 		$owner_uid = db_fetch_result($result, 0, "owner_uid");
 		$mark_unread_on_update = sql_bool_to_bool(db_fetch_result($result,
 			0, "mark_unread_on_update"));
@@ -346,7 +347,7 @@
 		$auth_login = db_fetch_result($result, 0, "auth_login");
 		$auth_pass = db_fetch_result($result, 0, "auth_pass");
 
-		if ($auth_pass_encrypted) {
+		if ($auth_pass_encrypted && function_exists("mcrypt_decrypt")) {
 			require_once "crypt.php";
 			$auth_pass = decrypt_string($auth_pass);
 		}
@@ -594,12 +595,12 @@
 				if ($feed_hub_url && $feed_self_url && function_exists('curl_init') &&
 					!ini_get("open_basedir")) {
 
-					require_once 'lib/pubsubhubbub/subscriber.php';
+					require_once 'lib/pubsubhubbub/Subscriber.php';
 
 					$callback_url = get_self_url_prefix() .
 						"/public.php?op=pubsub&id=$feed";
 
-					$s = new Subscriber($feed_hub_url, $callback_url);
+					$s = new Pubsubhubbub\Subscriber\Subscriber($feed_hub_url, $callback_url);
 
 					$rc = $s->subscribe($feed_self_url);
 
@@ -669,15 +670,11 @@
 					print "\n";
 				}
 
-				$entry_comments = $item->get_comments_url();
-				$entry_author = $item->get_author();
-
-				$entry_guid = db_escape_string(mb_substr($entry_guid, 0, 245));
-
-				$entry_comments = db_escape_string(mb_substr(trim($entry_comments), 0, 245));
-				$entry_author = db_escape_string(mb_substr(trim($entry_author), 0, 245));
-
+				$entry_comments = db_escape_string(mb_substr($item->get_comments_url(), 0, 245));
 				$num_comments = (int) $item->get_comments_count();
+
+				$entry_author = $item->get_author(); // escaped later
+				$entry_guid = db_escape_string(mb_substr($entry_guid, 0, 245));
 
 				_debug("author $entry_author", $debug_enabled);
 				_debug("num_comments: $num_comments", $debug_enabled);
@@ -849,7 +846,7 @@
 				$entry_tags = $article["tags"];
 				$entry_guid = db_escape_string($entry_guid);
 				$entry_title = db_escape_string($article["title"]);
-				$entry_author = db_escape_string($article["author"]);
+				$entry_author = db_escape_string(mb_substr($article["author"], 0, 245));
 				$entry_link = db_escape_string($article["link"]);
 				$entry_content = $article["content"]; // escaped below
 				$entry_force_catchup = $article["force_catchup"];
@@ -985,25 +982,6 @@
 							$published = 'false';
 						}
 
-						// N-grams
-
-						/* if (DB_TYPE == "pgsql" and defined('_NGRAM_TITLE_DUPLICATE_THRESHOLD')) {
-
-							$result = db_query("SELECT COUNT(*) AS similar FROM
-									ttrss_entries,ttrss_user_entries
-								WHERE ref_id = id AND updated >= NOW() - INTERVAL '7 day'
-									AND similarity(title, '$entry_title') >= "._NGRAM_TITLE_DUPLICATE_THRESHOLD."
-									AND owner_uid = $owner_uid");
-
-							$ngram_similar = db_fetch_result($result, 0, "similar");
-
-							_debug("N-gram similar results: $ngram_similar", $debug_enabled);
-
-							if ($ngram_similar > 0) {
-								$unread = 'false';
-							}
-						} */
-
 						$last_marked = ($marked == 'true') ? 'NOW()' : 'NULL';
 						$last_published = ($published == 'true') ? 'NOW()' : 'NULL';
 
@@ -1021,7 +999,7 @@
 								"/public.php?op=rss&id=-2&key=" .
 								get_feed_access_key(-2, false, $owner_uid);
 
-							$p = new Publisher(PUBSUBHUBBUB_HUB);
+							$p = new pubsubhubbub\publisher\Publisher(PUBSUBHUBBUB_HUB);
 
 							/* $pubsub_result = */ $p->publish_update($rss_link);
 						}

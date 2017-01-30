@@ -62,7 +62,7 @@ class Pref_Feeds extends Handler_Protected {
 			$cat['items'] = $this->get_category_items($line['id']);
 
 			$num_children = $this->calculate_children_count($cat);
-			$cat['param'] = vsprintf(_ngettext('(%d feed)', '(%d feeds)', $num_children), $num_children);
+			$cat['param'] = vsprintf(_ngettext('(%d feed)', '(%d feeds)', (int) $num_children), $num_children);
 
 			if ($num_children > 0 || $show_empty_cats)
 				array_push($items, $cat);
@@ -211,7 +211,7 @@ class Pref_Feeds extends Handler_Protected {
 				$cat['items'] = $this->get_category_items($line['id']);
 
 				$num_children = $this->calculate_children_count($cat);
-				$cat['param'] = vsprintf(_ngettext('(%d feed)', '(%d feeds)', $num_children), $num_children);
+				$cat['param'] = vsprintf(_ngettext('(%d feed)', '(%d feeds)', (int) $num_children), $num_children);
 
 				if ($num_children > 0 || $show_empty_cats)
 					array_push($root['items'], $cat);
@@ -261,7 +261,7 @@ class Pref_Feeds extends Handler_Protected {
 				array_push($root['items'], $cat);
 
 			$num_children = $this->calculate_children_count($root);
-			$root['param'] = vsprintf(_ngettext('(%d feed)', '(%d feeds)', $num_children), $num_children);
+			$root['param'] = vsprintf(_ngettext('(%d feed)', '(%d feeds)', (int) $num_children), $num_children);
 
 		} else {
 			$feed_result = $this->dbh->query("SELECT id, title, last_error,
@@ -646,7 +646,7 @@ class Pref_Feeds extends Handler_Protected {
 
 		$auth_pass = $this->dbh->fetch_result($result, 0, "auth_pass");
 
-		if ($auth_pass_encrypted) {
+		if ($auth_pass_encrypted && function_exists("mcrypt_decrypt")) {
 			require_once "crypt.php";
 			$auth_pass = decrypt_string($auth_pass);
 		}
@@ -983,14 +983,7 @@ class Pref_Feeds extends Handler_Protected {
 
 		$feed_language = $this->dbh->escape_string(trim($_POST["feed_language"]));
 
-		if (strlen(FEED_CRYPT_KEY) > 0) {
-			require_once "crypt.php";
-			$auth_pass = substr(encrypt_string($auth_pass), 0, 250);
-			$auth_pass_encrypted = 'true';
-		} else {
-			$auth_pass_encrypted = 'false';
-		}
-
+		$auth_pass_encrypted = 'false';
 		$auth_pass = $this->dbh->escape_string($auth_pass);
 
 		if (get_pref('ENABLE_FEED_CATS')) {
@@ -1418,6 +1411,7 @@ class Pref_Feeds extends Handler_Protected {
 		<div dojoType=\"fox.PrefFeedTree\" id=\"feedTree\"
 			dndController=\"dijit.tree.dndSource\"
 			betweenThreshold=\"5\"
+			autoExpand='true'
 			model=\"feedModel\" openOnClick=\"false\">
 		<script type=\"dojo/method\" event=\"onClick\" args=\"item\">
 			var id = String(item.id);
@@ -1889,14 +1883,7 @@ class Pref_Feeds extends Handler_Protected {
 					"SELECT id FROM ttrss_feeds
 					WHERE feed_url = '$feed' AND owner_uid = ".$_SESSION["uid"]);
 
-				if (strlen(FEED_CRYPT_KEY) > 0) {
-					require_once "crypt.php";
-					$pass = substr(encrypt_string($pass), 0, 250);
-					$auth_pass_encrypted = 'true';
-				} else {
-					$auth_pass_encrypted = 'false';
-				}
-
+				$auth_pass_encrypted = 'false';
 				$pass = $this->dbh->escape_string($pass);
 
 				if ($this->dbh->num_rows($result) == 0) {

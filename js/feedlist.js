@@ -6,11 +6,12 @@ var _viewfeed_last = 0;
 var _viewfeed_timeout = false;
 
 var counters_last_request = 0;
+var _counters_prev = [];
 
-function viewCategory(cat) {
+/*function viewCategory(cat) {
 	viewfeed({feed: cat, is_cat: true});
 	return false;
-}
+}*/
 
 function loadMoreHeadlines() {
 	try {
@@ -198,7 +199,7 @@ function feedlist_init() {
 		loading_set_progress(50);
 
 		document.onkeydown = hotkey_handler;
-		setTimeout("hotkey_prefix_timeout()", 5*1000);
+		setTimeout(hotkey_prefix_timeout, 5*1000);
 
 		if (!getActiveFeedId()) {
 			viewfeed({feed: -3});
@@ -253,9 +254,43 @@ function request_counters(force) {
 	}
 }
 
-function parse_counters(elems, scheduled_call) {
+// NOTE: this implementation is incomplete
+// for general objects but good enough for counters
+// http://adripofjavascript.com/blog/drips/object-equality-in-javascript.html
+function counter_is_equal(a, b) {
+	// Create arrays of property names
+	var aProps = Object.getOwnPropertyNames(a);
+	var bProps = Object.getOwnPropertyNames(b);
+
+	// If number of properties is different,
+	// objects are not equivalent
+	if (aProps.length != bProps.length) {
+		return false;
+	}
+
+	for (var i = 0; i < aProps.length; i++) {
+		var propName = aProps[i];
+
+		// If values of same property are not equal,
+		// objects are not equivalent
+		if (a[propName] !== b[propName]) {
+			return false;
+		}
+	}
+
+	// If we made it this far, objects
+	// are considered equivalent
+	return true;
+}
+
+
+function parse_counters(elems) {
 	try {
 		for (var l = 0; l < elems.length; l++) {
+
+			if (_counters_prev[l] && counter_is_equal(elems[l], _counters_prev[l])) {
+				continue;
+			}
 
 			var id = elems[l].id;
 			var kind = elems[l].kind;
@@ -276,9 +311,9 @@ function parse_counters(elems, scheduled_call) {
 				continue;
 			}
 
-			if (getFeedUnread(id, (kind == "cat")) != ctr ||
+			/*if (getFeedUnread(id, (kind == "cat")) != ctr ||
 					(kind == "cat")) {
-			}
+			}*/
 
 			setFeedUnread(id, (kind == "cat"), ctr);
 			setFeedValue(id, (kind == "cat"), 'auxcounter', auxctr);
@@ -299,6 +334,8 @@ function parse_counters(elems, scheduled_call) {
 		}
 
 		hideOrShowFeeds(getInitParam("hide_read_feeds") == 1);
+
+		_counters_prev = elems;
 
 	} catch (e) {
 		exception_error("parse_counters", e);

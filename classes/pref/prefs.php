@@ -565,10 +565,12 @@ class Pref_Prefs extends Handler_Protected {
 
 			} else if ($pref_name == "USER_CSS_THEME") {
 
-				$themes = array_merge(glob("themes/*.css"), glob("themes.local/*.css"));
+				$themes = array_merge(glob("themes/*.php"), glob("themes/*.css"), glob("themes.local/*.css"));
 				$themes = array_map("basename", $themes);
 				$themes = array_filter($themes, "theme_valid");
 				asort($themes);
+
+				if (!theme_valid($value)) $value = "default.php";
 
 				print_select($pref_name, $value, $themes,
 					'dojoType="dijit.form.Select"');
