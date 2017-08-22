@@ -22,13 +22,10 @@ class Af_RedditImgur extends Plugin {
 	function hook_prefs_tab($args) {
 		if ($args != "prefFeeds") return;
 
-		print "<div id=\"af_redditimgur_prefs\" dojoType=\"dijit.layout.AccordionPane\" title=\"".__('af_redditimgur settings')."\">";
+		print "<div dojoType=\"dijit.layout.AccordionPane\" title=\"".__('Reddit content settings (af_redditimgur)')."\">";
 
 		$enable_readability = $this->host->get($this, "enable_readability");
-		$enable_readability_checked = $enable_readability ? "checked" : "";
-
 		$enable_content_dupcheck = $this->host->get($this, "enable_content_dupcheck");
-		$enable_content_dupcheck_checked = $enable_content_dupcheck ? "checked" : "";
 
 		print "<form dojoType=\"dijit.form.Form\">";
 
@@ -46,27 +43,21 @@ class Af_RedditImgur extends Plugin {
 			}
 			</script>";
 
-		print "<input dojoType=\"dijit.form.TextBox\" style=\"display : none\" name=\"op\" value=\"pluginhandler\">";
-		print "<input dojoType=\"dijit.form.TextBox\" style=\"display : none\" name=\"method\" value=\"save\">";
-		print "<input dojoType=\"dijit.form.TextBox\" style=\"display : none\" name=\"plugin\" value=\"af_redditimgur\">";
+		print_hidden("op", "pluginhandler");
+		print_hidden("method", "save");
+		print_hidden("plugin", "af_redditimgur");
 
 		print "<p>" . __("Uses Readability (full-text-rss) implementation by <a target='_blank' href='https://bitbucket.org/fivefilters/'>FiveFilters.org</a>");
 		print "<p/>";
 
-		print "<input dojoType=\"dijit.form.CheckBox\" id=\"enable_readability\"
-			$enable_readability_checked name=\"enable_readability\">&nbsp;";
-
-		print "<label for=\"enable_readability\">" . __("Extract missing content using Readability") . "</label>";
+		print_checkbox("enable_readability", $enable_readability);
+		print "&nbsp;<label for=\"enable_readability\">" . __("Extract missing content using Readability") . "</label>";
 
 		print "<br/>";
 
-		print "<input dojoType=\"dijit.form.CheckBox\" id=\"enable_content_dupcheck\"
-			$enable_content_dupcheck_checked name=\"enable_content_dupcheck\">&nbsp;";
-
-		print "<label for=\"enable_content_dupcheck\">" . __("Enable additional duplicate checking") . "</label>";
-		print "<p><button dojoType=\"dijit.form.Button\" type=\"submit\">".
-			__("Save")."</button>";
-
+		print_checkbox("enable_content_dupcheck", $enable_content_dupcheck);
+		print "&nbsp;<label for=\"enable_content_dupcheck\">" . __("Enable additional duplicate checking") . "</label>";
+		print "<p>"; print_button("submit", __("Save"));
 		print "</form>";
 
 		print "</div>";
@@ -82,6 +73,9 @@ class Af_RedditImgur extends Plugin {
 		echo __("Configuration saved");
 	}
 
+	/**
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+	 */
 	private function inline_stuff($article, &$doc, $xpath, $debug = false) {
 
 		$entries = $xpath->query('(//a[@href]|//img[@src])');
@@ -451,13 +445,16 @@ class Af_RedditImgur extends Plugin {
 			curl_setopt($ch, CURLOPT_FOLLOWLOCATION, !ini_get("open_basedir"));
 			curl_setopt($ch, CURLOPT_USERAGENT, $useragent);
 
-			@$result = curl_exec($ch);
+			@curl_exec($ch);
 			$content_type = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
 		}
 
 		return $content_type;
 	}
 
+	/**
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+	 */
 	private function readability($article, $url, $doc, $xpath, $debug = false) {
 
 		if (!defined('NO_CURL') && function_exists("curl_init") && $this->host->get($this, "enable_readability") &&
@@ -519,4 +516,3 @@ class Af_RedditImgur extends Plugin {
 		return $article;
 	}
 }
-?>

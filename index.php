@@ -232,8 +232,7 @@
 
 			<button id="net-alert" dojoType="dijit.form.Button" style="display : none" disabled="true"
 				title="<?php echo __("Communication problem with server.") ?>">
-			<img
-				src="images/error.png" />
+				<img src="images/error.png" />
 			</button>
 
 			<div dojoType="dijit.form.DropDownButton">
@@ -278,7 +277,7 @@
 
 		<div id="floatingTitle" style="visibility : hidden"></div>
 
-		<div id="headlines-frame" dojoType="dijit.layout.ContentPane"
+		<div id="headlines-frame" dojoType="dijit.layout.ContentPane" tabindex="0"
 				onscroll="headlines_scroll_handler(this)" region="center">
 			<div id="headlinesInnerContainer">
 				<div class="whiteBox"><?php echo __('Loading, please wait...') ?></div>
