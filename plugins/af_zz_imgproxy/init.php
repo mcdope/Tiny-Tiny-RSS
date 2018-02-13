@@ -1,5 +1,7 @@
 <?php
 class Af_Zz_ImgProxy extends Plugin {
+
+	/* @var PluginHost $host */
 	private $host;
 
 	function about() {
@@ -55,13 +57,9 @@ class Af_Zz_ImgProxy extends Plugin {
 		header("Content-Disposition: inline; filename=\"".basename($local_filename)."\"");
 
 		if (file_exists($local_filename)) {
-			$mimetype = mime_content_type($local_filename);
-			header("Content-type: $mimetype");
 
-			$stamp = gmdate("D, d M Y H:i:s", filemtime($local_filename)). " GMT";
-			header("Last-Modified: $stamp", true);
+			send_local_file($local_filename);
 
-			readfile($local_filename);
 		} else {
 			$data = fetch_file_contents(array("url" => $url));
 
@@ -199,7 +197,7 @@ class Af_Zz_ImgProxy extends Plugin {
 			}
 		}
 
-		if ($need_saving) $article["content"] = $doc->saveXML();
+		if ($need_saving) $article["content"] = $doc->saveHTML();
 
 		return $article;
 	}
@@ -245,8 +243,8 @@ class Af_Zz_ImgProxy extends Plugin {
 	}
 
 	function save() {
-		$proxy_all = checkbox_to_sql_bool($_POST["proxy_all"]) == "true";
-		$disable_cache = checkbox_to_sql_bool($_POST["disable_cache"]) == "true";
+		$proxy_all = checkbox_to_sql_bool($_POST["proxy_all"]);
+		$disable_cache = checkbox_to_sql_bool($_POST["disable_cache"]);
 
 		$this->host->set($this, "proxy_all", $proxy_all, false);
 		$this->host->set($this, "disable_cache", $disable_cache);

@@ -14,6 +14,7 @@ class Af_Comics extends Plugin {
 		$this->host = $host;
 
 		$host->add_hook($host::HOOK_FETCH_FEED, $this);
+		$host->add_hook($host::HOOK_SUBSCRIBE_FEED, $this);
 		$host->add_hook($host::HOOK_ARTICLE_FILTER, $this);
 		$host->add_hook($host::HOOK_PREFS_TAB, $this);
 
@@ -65,7 +66,7 @@ class Af_Comics extends Plugin {
 		}
 		print "</ul>";
 
-		print "<p>".__('GoComics requires a specific URL to workaround their lack of feed support: <code>http://feeds.feedburner.com/uclick/<em>comic_name</em></code> (e.g. <code>http://www.gocomics.com/garfield</code> uses <code>http://feeds.feedburner.com/uclick/garfield</code>).')."</p>";
+		print "<p>".__("To subscribe to GoComics use the comic's regular web page as the feed URL (e.g. for the <em>Garfield</em> comic use <code>http://www.gocomics.com/garfield</code>).")."</p>";
 
 		print "<p>".__('Drop any updated filters into <code>filters.local</code> in plugin directory.')."</p>";
 
@@ -89,7 +90,7 @@ class Af_Comics extends Plugin {
 		if ($auth_login || $auth_pass)
 			return $feed_data;
 
-		if (preg_match('#^https?://feeds.feedburner.com/uclick/([-a-z]+)#', $fetch_url, $comic)) {
+		if (preg_match('#^https?://(?:feeds\.feedburner\.com/uclick|www\.gocomics\.com)/([-a-z0-9]+)$#i', $fetch_url, $comic)) {
 			$site_url = 'http://www.gocomics.com/' . $comic[1];
 
 			$article_link = $site_url . date('/Y/m/d');
@@ -123,11 +124,22 @@ class Af_Comics extends Plugin {
 					$node = $xpath->query('//picture[contains(@class, "item-comic-image")]/img')->item(0);
 
 					if ($node) {
+					    $node->removeAttribute("width");
+
+						if ($node->hasAttribute("srcset") && preg_match("|/transparent\.png$|", $node->getAttribute("srcset"))) {
+							if ($node->hasAttribute("data-srcset")) {
+								$node->setAttribute("srcset", $node->getAttribute("data-srcset"));
+								$node->removeAttribute("data-srcset");
+							} elseif ($node->hasAttribute("src")) {
+								$node->removeAttribute("srcset");
+							}
+						}
+
 						$tpl->setVariable('ARTICLE_ID', $article_link, true);
 						$tpl->setVariable('ARTICLE_LINK', $article_link, true);
 						$tpl->setVariable('ARTICLE_TITLE', date('l, F d, Y'), true);
 						$tpl->setVariable('ARTICLE_EXCERPT', '', true);
-						$tpl->setVariable('ARTICLE_CONTENT', $doc->saveXML($node), true);
+						$tpl->setVariable('ARTICLE_CONTENT', $doc->saveHTML($node), true);
 
 						$tpl->setVariable('ARTICLE_AUTHOR', '', true);
 						$tpl->setVariable('ARTICLE_SOURCE_LINK', $site_url, true);
@@ -147,6 +159,16 @@ class Af_Comics extends Plugin {
 		}
 
 		return $feed_data;
+	}
+
+	function hook_subscribe_feed($contents, $url, $auth_login, $auth_pass) {
+		if ($auth_login || $auth_pass)
+			return $contents;
+
+		if (preg_match('#^https?://www\.gocomics\.com/([-a-z0-9]+)$#i', $url))
+			return '<?xml version="1.0" encoding="utf-8"?>'; // Get is_html() to return false.
+
+		return $contents;
 	}
 
 	function api_version() {
