@@ -1,6 +1,6 @@
 <?php
 	define('EXPECTED_CONFIG_VERSION', 26);
-	define('SCHEMA_VERSION', 133);
+	define('SCHEMA_VERSION', 134);
 
 	define('LABEL_BASE_INDEX', -1024);
 	define('PLUGIN_FEED_BASE_INDEX', -128);
@@ -490,6 +490,9 @@
 
 			 $context_options = array(
 				  'http' => array(
+						'header' => array(
+							'Connection: close'
+						),
 						'method' => 'GET',
 						'ignore_errors' => true,
 						'timeout' => $timeout ? $timeout : FILE_FETCH_TIMEOUT,
@@ -497,7 +500,7 @@
 				  );
 
 			if (!$post_query && $last_modified) {
-				$context_options['http']['header'] = "If-Modified-Since: $last_modified\r\n";
+				array_push($context_options['http']['header'], "If-Modified-Since: $last_modified");
 			}
 
 			if (defined('_HTTP_PROXY')) {
@@ -1651,7 +1654,7 @@
 			}
 		}
 
-		$allowed_elements = array('a', 'address', 'acronym', 'audio', 'article', 'aside',
+		$allowed_elements = array('a', 'abbr', 'address', 'acronym', 'audio', 'article', 'aside',
 			'b', 'bdi', 'bdo', 'big', 'blockquote', 'body', 'br',
 			'caption', 'cite', 'center', 'code', 'col', 'colgroup',
 			'data', 'dd', 'del', 'details', 'description', 'dfn', 'div', 'dl', 'font',
