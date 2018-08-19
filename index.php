@@ -11,8 +11,8 @@
 
 	// we need a separate check here because functions.php might get parsed
 	// incorrectly before 5.3 because of :: syntax.
-	if (version_compare(PHP_VERSION, '5.3.0', '<')) {
-		print "<b>Fatal Error</b>: PHP version 5.3.0 or newer required.\n";
+	if (version_compare(PHP_VERSION, '5.6.0', '<')) {
+		print "<b>Fatal Error</b>: PHP version 5.6.0 or newer required. You're using " . PHP_VERSION . ".\n";
 		exit;
 	}
 
@@ -113,8 +113,6 @@
 		'use strict';
 		require({cache:{}});
 	<?php
-		require_once 'lib/jshrink/Minifier.php';
-
 		print get_minified_js(["tt-rss.js",
 			"functions.js", "feedlist.js", "viewfeed.js", "PluginHost.js"]);
 	?>
