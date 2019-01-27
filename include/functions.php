@@ -1,6 +1,6 @@
 <?php
 	define('EXPECTED_CONFIG_VERSION', 26);
-	define('SCHEMA_VERSION', 134);
+	define('SCHEMA_VERSION', 135);
 
 	define('LABEL_BASE_INDEX', -1024);
 	define('PLUGIN_FEED_BASE_INDEX', -128);
@@ -13,7 +13,6 @@
 	$fetch_last_error_content = false; // curl only for the time being
 	$fetch_effective_url = false;
 	$fetch_curl_used = false;
-	$suppress_debugging = false;
 
 	libxml_disable_entity_loader(true);
 
@@ -106,6 +105,7 @@
 					"pt_PT" => "Portuguese/Portugal",
 					"zh_CN" => "Simplified Chinese",
 					"zh_TW" => "Traditional Chinese",
+					"uk_UA" => "Украинский",
 					"sv_SE" => "Svenska",
 					"fi_FI" => "Suomi",
 					"tr_TR" => "Türkçe");
@@ -156,66 +156,10 @@
 
 	$schema_version = false;
 
-	function _debug_suppress($suppress) {
-		global $suppress_debugging;
-
-		$suppress_debugging = $suppress;
+	// TODO: compat wrapper, remove at some point
+	function _debug($msg) {
+	    Debug::log($msg);
 	}
-
-	/**
-	 * Print a timestamped debug message.
-	 *
-	 * @param string $msg The debug message.
-	 * @return void
-	 */
-	function _debug($msg, $show = true) {
-		global $suppress_debugging;
-
-		//echo "[$suppress_debugging] $msg $show\n";
-
-		if ($suppress_debugging) return false;
-
-		$ts = strftime("%H:%M:%S", time());
-		if (function_exists('posix_getpid')) {
-			$ts = "$ts/" . posix_getpid();
-		}
-
-		if ($show && !(defined('QUIET') && QUIET)) {
-			print "[$ts] $msg\n";
-		}
-
-		if (defined('LOGFILE'))  {
-			$fp = fopen(LOGFILE, 'a+');
-
-			if ($fp) {
-				$locked = false;
-
-				if (function_exists("flock")) {
-					$tries = 0;
-
-					// try to lock logfile for writing
-					while ($tries < 5 && !$locked = flock($fp, LOCK_EX | LOCK_NB)) {
-						sleep(1);
-						++$tries;
-					}
-
-					if (!$locked) {
-						fclose($fp);
-						return;
-					}
-				}
-
-				fputs($fp, "[$ts] $msg\n");
-
-				if (function_exists("flock")) {
-					flock($fp, LOCK_UN);
-				}
-
-				fclose($fp);
-			}
-		}
-
-	} // function _debug
 
 	/**
 	 * Purge a feed old posts.
@@ -227,7 +171,7 @@
 	 * @access public
 	 * @return void
 	 */
-	function purge_feed($feed_id, $purge_interval, $debug = false) {
+	function purge_feed($feed_id, $purge_interval) {
 
 		if (!$purge_interval) $purge_interval = feed_purge_interval($feed_id);
 
@@ -292,9 +236,7 @@
 
 		CCache::update($feed_id, $owner_uid);
 
-		if ($debug) {
-			_debug("Purged feed $feed_id ($purge_interval): deleted $rows articles");
-		}
+        Debug::log("Purged feed $feed_id ($purge_interval): deleted $rows articles");
 
 		return $rows;
 	} // function purge_feed
@@ -421,7 +363,7 @@
 				// holy shit closures in php
 				// download & upload are *expected* sizes respectively, could be zero
 				curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, function($curl_handle, $download_size, $downloaded, $upload_size, $uploaded) use( &$max_size) {
-					//_debug("[curl progressfunction] $downloaded $max_size");
+					Debug::log("[curl progressfunction] $downloaded $max_size", Debug::$LOG_EXTENDED);
 
 					return ($downloaded > $max_size) ? 1 : 0; // if max size is set, abort when exceeding it
 				});
@@ -495,6 +437,14 @@
 			}
 
 			curl_close($ch);
+
+			$is_gzipped = RSSUtils::is_gzipped($contents);
+
+			if ($is_gzipped) {
+				$tmp = @gzdecode($contents);
+
+				if ($tmp) $contents = $tmp;
+			}
 
 			return $contents;
 		} else {
@@ -581,6 +531,15 @@
 
 				return false;
 			}
+
+			$is_gzipped = RSSUtils::is_gzipped($data);
+
+			if ($is_gzipped) {
+				$tmp = @gzdecode($data);
+
+				if ($tmp) $data = $tmp;
+			}
+
 			return $data;
 		}
 
@@ -643,7 +602,7 @@
 
 		$sth = $pdo->query("SELECT pref_name,def_value FROM ttrss_prefs");
 
-		$profile = $profile ? $profile : null;
+		if (!is_numeric($profile) || !$profile || get_schema_version() < 63) $profile = null;
 
 		$u_sth = $pdo->prepare("SELECT pref_name
 			FROM ttrss_user_prefs WHERE owner_uid = :uid AND
@@ -700,22 +659,26 @@
 
 		if (!SINGLE_USER_MODE) {
 			$user_id = false;
+			$auth_module = false;
 
 			foreach (PluginHost::getInstance()->get_hooks(PluginHost::HOOK_AUTH_USER) as $plugin) {
 
 				$user_id = (int) $plugin->authenticate($login, $password);
 
 				if ($user_id) {
-					$_SESSION["auth_module"] = strtolower(get_class($plugin));
+					$auth_module = strtolower(get_class($plugin));
 					break;
 				}
 			}
 
 			if ($user_id && !$check_only) {
-				@session_start();
+
+				session_start();
+				session_regenerate_id(true);
 
 				$_SESSION["uid"] = $user_id;
 				$_SESSION["version"] = VERSION_STATIC;
+				$_SESSION["auth_module"] = $auth_module;
 
 				$pdo = DB::pdo();
 				$sth = $pdo->prepare("SELECT login,access_level,pwd_hash FROM ttrss_users
@@ -733,8 +696,6 @@
 				$_SESSION["ip_address"] = $_SERVER["REMOTE_ADDR"];
 				$_SESSION["user_agent"] = sha1($_SERVER['HTTP_USER_AGENT']);
 				$_SESSION["pwd_hash"] = $row["pwd_hash"];
-
-				$_SESSION["last_version_check"] = time();
 
 				initialize_user_prefs($_SESSION["uid"]);
 
@@ -811,10 +772,11 @@
 	}
 
 	function logout_user() {
-		session_destroy();
+		@session_destroy();
 		if (isset($_COOKIE[session_name()])) {
 		   setcookie(session_name(), '', time()-42000, '/');
 		}
+		session_commit();
 	}
 
 	function validate_csrf($csrf_token) {
@@ -856,8 +818,7 @@
 				}
 
 				if (!$_SESSION["uid"]) {
-					@session_destroy();
-					setcookie(session_name(), '', time()-42000, '/');
+					logout_user();
 
 					render_login_form();
 					exit;
@@ -903,10 +864,18 @@
 		}
 	}
 
-	// is not utf8 clean
+	function mb_substr_replace($original, $replacement, $position, $length) {
+		$startString = mb_substr($original, 0, $position, "UTF-8");
+		$endString = mb_substr($original, $position + $length, mb_strlen($original), "UTF-8");
+
+		$out = $startString . $replacement . $endString;
+
+		return $out;
+	}
+
 	function truncate_middle($str, $max_len, $suffix = '&hellip;') {
-		if (strlen($str) > $max_len) {
-			return substr_replace($str, $suffix, $max_len / 2, mb_strlen($str) - $max_len);
+		if (mb_strlen($str) > $max_len) {
+			return mb_substr_replace($str, $suffix, $max_len / 2, mb_strlen($str) - $max_len);
 		} else {
 			return $str;
 		}
@@ -1123,6 +1092,7 @@
 			$params[strtolower($param)] = (int) get_pref($param);
 		}
 
+		$params["check_for_updates"] = CHECK_FOR_UPDATES;
 		$params["icons_url"] = ICONS_URL;
 		$params["cookie_lifetime"] = SESSION_COOKIE_LIFETIME;
 		$params["default_view_mode"] = get_pref("_DEFAULT_VIEW_MODE");
@@ -1133,7 +1103,7 @@
 		$params["label_base_index"] = (int) LABEL_BASE_INDEX;
 
 		$theme = get_pref( "USER_CSS_THEME", false, false);
-		$params["theme"] = theme_valid("$theme") ? $theme : "";
+		$params["theme"] = theme_exists($theme) ? $theme : "";
 
 		$params["plugins"] = implode(", ", PluginHost::getInstance()->get_plugin_names());
 
@@ -1162,9 +1132,6 @@
 
 		$params['simple_update'] = defined('SIMPLE_UPDATE_MODE') && SIMPLE_UPDATE_MODE;
 
-		$params["icon_alert"] = base64_img("images/alert.png");
-		$params["icon_information"] = base64_img("images/information.png");
-		$params["icon_cross"] = base64_img("images/cross.png");
 		$params["icon_indicator_white"] = base64_img("images/indicator_white.gif");
 
 		$params["labels"] = Labels::get_all_labels($_SESSION["uid"]);
@@ -1219,8 +1186,8 @@
 				"feed_debug_viewfeed" => __("Debug viewfeed()"),
 				"catchup_all" => __("Mark all feeds as read"),
 				"cat_toggle_collapse" => __("Un/collapse current category"),
-				"toggle_combined_mode" => __("Toggle combined mode"),
-				"toggle_cdm_expanded" => __("Toggle auto expand in combined mode")),
+				"toggle_cdm_expanded" => __("Toggle auto expand in combined mode"),
+				"toggle_combined_mode" => __("Toggle combined mode")),
 			__("Go to") => array(
 				"goto_all" => __("All articles"),
 				"goto_fresh" => __("Fresh"),
@@ -1232,6 +1199,7 @@
 				"create_label" => __("Create label"),
 				"create_filter" => __("Create filter"),
 				"collapse_sidebar" => __("Un/collapse sidebar"),
+				"toggle_night_mode" => __("Toggle night mode"),
 				"help_dialog" => __("Show help dialog"))
 		);
 
@@ -1299,17 +1267,16 @@
 			"g t" => "goto_tagcloud",
 			"g *p" => "goto_prefs",
 	//			"other" => array(
-			"(9)|Tab" => "select_article_cursor", // tab
+			"r" => "select_article_cursor",
 			"c l" => "create_label",
 			"c f" => "create_filter",
 			"c s" => "collapse_sidebar",
+			"a *n" => "toggle_night_mode",
 			"^(191)|Ctrl+/" => "help_dialog",
 		);
 
-		if (get_pref('COMBINED_DISPLAY_MODE')) {
-			$hotkeys["^(38)|Ctrl-up"] = "prev_article_noscroll";
-			$hotkeys["^(40)|Ctrl-down"] = "next_article_noscroll";
-		}
+		$hotkeys["^(38)|Ctrl-up"] = "prev_article_noscroll";
+		$hotkeys["^(40)|Ctrl-down"] = "next_article_noscroll";
 
 		foreach (PluginHost::getInstance()->get_hooks(PluginHost::HOOK_HOTKEY_MAP) as $plugin) {
 			$hotkeys = $plugin->hook_hotkey_map($hotkeys);
@@ -1328,27 +1295,7 @@
 		return array($prefixes, $hotkeys);
 	}
 
-	function check_for_update() {
-		if (defined("GIT_VERSION_TIMESTAMP")) {
-			$content = @fetch_file_contents(array("url" => "http://tt-rss.org/version.json", "timeout" => 5));
-
-			if ($content) {
-				$content = json_decode($content, true);
-
-				if ($content && isset($content["changeset"])) {
-					if ((int)GIT_VERSION_TIMESTAMP < (int)$content["changeset"]["timestamp"] &&
-						GIT_VERSION_HEAD != $content["changeset"]["id"]) {
-
-						return $content["changeset"]["id"];
-					}
-				}
-			}
-		}
-
-		return "";
-	}
-
-	function make_runtime_info($disable_update_check = false) {
+	function make_runtime_info() {
 		$data = array();
 
 		$pdo = Db::pdo();
@@ -1363,21 +1310,22 @@
 
 		$data["max_feed_id"] = (int) $max_feed_id;
 		$data["num_feeds"] = (int) $num_feeds;
-
-		$data['last_article_id'] = Article::getLastArticleId();
 		$data['cdm_expanded'] = get_pref('CDM_EXPANDED');
-
-		$data['dep_ts'] = calculate_dep_timestamp();
-		$data['reload_on_ts_change'] = !defined('_NO_RELOAD_ON_TS_CHANGE');
-
 		$data["labels"] = Labels::get_all_labels($_SESSION["uid"]);
 
-		if (CHECK_FOR_UPDATES && !$disable_update_check && $_SESSION["last_version_check"] + 86400 + rand(-1000, 1000) < time()) {
-			$update_result = @check_for_update();
+		if (LOG_DESTINATION == 'sql' && $_SESSION['access_level'] >= 10) {
+			if (DB_TYPE == 'pgsql') {
+				$log_interval = "created_at > NOW() - interval '1 hour'";
+			} else {
+				$log_interval = "created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)";
+			}
 
-			$data["update_result"] = $update_result;
+			$sth = $pdo->prepare("SELECT COUNT(id) AS cid FROM ttrss_error_log WHERE $log_interval");
+			$sth->execute();
 
-			$_SESSION["last_version_check"] = time();
+			if ($row = $sth->fetch()) {
+				$data['recent_log_events'] = $row['cid'];
+			}
 		}
 
 		if (file_exists(LOCK_DIRECTORY . "/update_daemon.lock")) {
@@ -1564,6 +1512,66 @@
 		return false;
 	}
 
+	// check for locally cached (media) URLs and rewrite to local versions
+	// this is called separately after sanitize() and plugin render article hooks to allow
+	// plugins work on original source URLs used before caching
+
+	function rewrite_cached_urls($str) {
+		$charset_hack = '<head>
+				<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+			</head>';
+
+		$res = trim($str); if (!$res) return '';
+
+		$doc = new DOMDocument();
+		$doc->loadHTML($charset_hack . $res);
+		$xpath = new DOMXPath($doc);
+
+		$entries = $xpath->query('(//img[@src]|//video[@poster]|//video/source[@src]|//audio/source[@src])');
+
+		$need_saving = false;
+
+		foreach ($entries as $entry) {
+
+			if ($entry->hasAttribute('src') || $entry->hasAttribute('poster')) {
+
+				// should be already absolutized because this is called after sanitize()
+				$src = $entry->hasAttribute('poster') ? $entry->getAttribute('poster') : $entry->getAttribute('src');
+				$cached_filename = CACHE_DIR . '/images/' . sha1($src);
+
+				if (file_exists($cached_filename)) {
+
+					// this is strictly cosmetic
+					if ($entry->tagName == 'img') {
+						$suffix = ".png";
+					} else if ($entry->parentNode && $entry->parentNode->tagName == "video") {
+						$suffix = ".mp4";
+					} else if ($entry->parentNode && $entry->parentNode->tagName == "audio") {
+						$suffix = ".ogg";
+					} else {
+						$suffix = "";
+					}
+
+					$src = get_self_url_prefix() . '/public.php?op=cached_url&hash=' . sha1($src) . $suffix;
+
+					if ($entry->hasAttribute('poster'))
+						$entry->setAttribute('poster', $src);
+					else
+						$entry->setAttribute('src', $src);
+
+					$need_saving = true;
+				}
+			}
+		}
+
+		if ($need_saving) {
+			$doc->removeChild($doc->firstChild); //remove doctype
+			$res = $doc->saveHTML();
+		}
+
+		return $res;
+	}
+
 	function sanitize($str, $force_remove_images = false, $owner = false, $site_url = false, $highlight_words = false, $article_id = false) {
 		if (!$owner) $owner = $_SESSION["uid"];
 
@@ -1596,31 +1604,8 @@
 
 			if ($entry->hasAttribute('src')) {
 				$src = rewrite_relative_url($rewrite_base_url, $entry->getAttribute('src'));
-				$cached_filename = CACHE_DIR . '/images/' . sha1($src);
 
-				if (file_exists($cached_filename)) {
-
-					// this is strictly cosmetic
-					if ($entry->tagName == 'img') {
-						$suffix = ".png";
-					} else if ($entry->parentNode && $entry->parentNode->tagName == "video") {
-						$suffix = ".mp4";
-					} else if ($entry->parentNode && $entry->parentNode->tagName == "audio") {
-						$suffix = ".ogg";
-					} else {
-						$suffix = "";
-					}
-
-					$src = get_self_url_prefix() . '/public.php?op=cached_url&hash=' . sha1($src) . $suffix;
-
-					if ($entry->hasAttribute('srcset')) {
-						$entry->removeAttribute('srcset');
-					}
-
-					if ($entry->hasAttribute('sizes')) {
-						$entry->removeAttribute('sizes');
-					}
-				}
+				// cache stuff has gone to rewrite_cached_urls()
 
 				$entry->setAttribute('src', $src);
 			}
@@ -1645,22 +1630,32 @@
 						}
 					}
 				}
+			}
 
-				if (($owner && get_pref("STRIP_IMAGES", $owner)) ||
-					$force_remove_images || $_SESSION["bw_limit"]) {
+			if ($entry->hasAttribute('src') &&
+					($owner && get_pref("STRIP_IMAGES", $owner)) || $force_remove_images || $_SESSION["bw_limit"]) {
 
-					$p = $doc->createElement('p');
+				$p = $doc->createElement('p');
 
-					$a = $doc->createElement('a');
-					$a->setAttribute('href', $entry->getAttribute('src'));
+				$a = $doc->createElement('a');
+				$a->setAttribute('href', $entry->getAttribute('src'));
 
-					$a->appendChild(new DOMText($entry->getAttribute('src')));
-					$a->setAttribute('target', '_blank');
-					$a->setAttribute('rel', 'noopener noreferrer');
+				$a->appendChild(new DOMText($entry->getAttribute('src')));
+				$a->setAttribute('target', '_blank');
+				$a->setAttribute('rel', 'noopener noreferrer');
 
-					$p->appendChild($a);
+				$p->appendChild($a);
 
-					$entry->parentNode->replaceChild($p, $entry);
+				if ($entry->nodeName == 'source') {
+
+					if ($entry->parentNode && $entry->parentNode->parentNode)
+						$entry->parentNode->parentNode->replaceChild($p, $entry->parentNode);
+
+				} else if ($entry->nodeName == 'img') {
+
+					if ($entry->parentNode)
+						$entry->parentNode->replaceChild($p, $entry);
+
 				}
 			}
 
@@ -1769,6 +1764,10 @@
 				foreach ($entry->attributes as $attr) {
 
 					if (strpos($attr->nodeName, 'on') === 0) {
+						array_push($attrs_to_remove, $attr);
+					}
+
+					if (strpos($attr->nodeName, "data-") === 0) {
 						array_push($attrs_to_remove, $attr);
 					}
 
@@ -1957,7 +1956,8 @@
 				}
 			}
 
-			$filter = array();
+			$filter = [];
+			$filter["id"] = $filter_id;
 			$filter["match_any_rule"] = sql_bool_to_bool($line["match_any_rule"]);
 			$filter["inverse"] = sql_bool_to_bool($line["inverse"]);
 			$filter["rules"] = $rules;
@@ -1969,20 +1969,6 @@
 		}
 
 		return $filters;
-	}
-
-	function get_score_pic($score) {
-		if ($score > 100) {
-			return "score_high.png";
-		} else if ($score > 0) {
-			return "score_half_high.png";
-		} else if ($score < -100) {
-			return "score_low.png";
-		} else if ($score < 0) {
-			return "score_half_low.png";
-		} else {
-			return "score_neutral.png";
-		}
 	}
 
 	function init_plugins() {
@@ -2101,7 +2087,7 @@
 		$sth = $pdo->prepare("SELECT access_key FROM ttrss_access_keys
 				WHERE feed_id = ? AND is_cat = ?
 				AND owner_uid = ?");
-		$sth->execute([$feed_id, (int)$is_cat, $owner_uid]);
+		$sth->execute([$feed_id, $is_cat, $owner_uid]);
 
 		if ($row = $sth->fetch()) {
 			return $row["access_key"];
@@ -2112,7 +2098,7 @@
 					(access_key, feed_id, is_cat, owner_uid)
 					VALUES (?, ?, ?, ?)");
 
-			$sth->execute([$key, $feed_id, (int)$is_cat, $owner_uid]);
+			$sth->execute([$key, $feed_id, $is_cat, $owner_uid]);
 
 			return $key;
 		}
@@ -2385,52 +2371,6 @@
 		return in_array($interface, class_implements($class));
 	}
 
-	function get_minified_js($files) {
-
-		$rv = '';
-
-		foreach ($files as $js) {
-			if (!isset($_GET['debug'])) {
-				$cached_file = CACHE_DIR . "/js/".basename($js);
-
-				if (file_exists($cached_file) && is_readable($cached_file) && filemtime($cached_file) >= filemtime("js/$js")) {
-
-					list($header, $contents) = explode("\n", file_get_contents($cached_file), 2);
-
-					if ($header && $contents) {
-						list($htag, $hversion) = explode(":", $header);
-
-						if ($htag == "tt-rss" && $hversion == VERSION) {
-							$rv .= $contents;
-							continue;
-						}
-					}
-				}
-
-				$minified = JShrink\Minifier::minify(file_get_contents("js/$js"));
-				file_put_contents($cached_file, "tt-rss:" . VERSION . "\n" . $minified);
-				$rv .= $minified;
-
-			} else {
-				$rv .= file_get_contents("js/$js"); // no cache in debug mode
-			}
-		}
-
-		return $rv;
-	}
-
-	function calculate_dep_timestamp() {
-		$files = array_merge(glob("js/*.js"), glob("css/*.css"));
-
-		$max_ts = -1;
-
-		foreach ($files as $file) {
-			if (filemtime($file) > $max_ts) $max_ts = filemtime($file);
-		}
-
-		return $max_ts;
-	}
-
 	function T_js_decl($s1, $s2) {
 		if ($s1 && $s2) {
 			$s1 = preg_replace("/\n/", "", $s1);
@@ -2485,27 +2425,8 @@
 		if (file_exists($check)) return $check;
 	}
 
-	function theme_valid($theme) {
-		$bundled_themes = [ "default.php", "night.css", "compact.css" ];
-
-		if (in_array($theme, $bundled_themes)) return true;
-
-		$file = "themes/" . basename($theme);
-
-		if (!file_exists($file)) $file = "themes.local/" . basename($theme);
-
-		if (file_exists($file) && is_readable($file)) {
-			$fh = fopen($file, "r");
-
-			if ($fh) {
-				$header = fgets($fh);
-				fclose($fh);
-
-				return strpos($header, "supports-version:" . VERSION_STATIC) !== FALSE;
-			}
-		}
-
-		return false;
+	function theme_exists($theme) {
+		return file_exists("themes/$theme") || file_exists("themes.local/$theme");
 	}
 
 	/**
@@ -2564,6 +2485,9 @@
 		should be loaded systemwide in config.php */
 	function send_local_file($filename) {
 		if (file_exists($filename)) {
+
+			if (is_writable($filename)) touch($filename);
+
 			$tmppluginhost = new PluginHost();
 
 			$tmppluginhost->load(PLUGINS, PluginHost::KIND_SYSTEM);
@@ -2617,4 +2541,16 @@
 
 	function arr_qmarks($arr) {
 		return str_repeat('?,', count($arr) - 1) . '?';
+	}
+
+	function get_scripts_timestamp() {
+		$files = glob("js/*.js");
+		$ts = 0;
+
+		foreach ($files as $file) {
+			$file_ts = filemtime($file);
+			if ($file_ts > $ts) $ts = $file_ts;
+		}
+
+		return $ts;
 	}

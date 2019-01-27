@@ -46,7 +46,8 @@ class Af_Comics extends Plugin {
 	function hook_prefs_tab($args) {
 		if ($args != "prefFeeds") return;
 
-		print "<div dojoType=\"dijit.layout.AccordionPane\" title=\"".__('Feeds supported by af_comics')."\">";
+		print "<div dojoType=\"dijit.layout.AccordionPane\" 
+			title=\"<i class='material-icons'>photo</i> ".__('Feeds supported by af_comics')."\">";
 
 		print "<p>" . __("The following comics are currently supported:") . "</p>";
 
@@ -60,7 +61,7 @@ class Af_Comics extends Plugin {
 
 		asort($comics);
 
-		print "<ul class=\"browseFeedList\" style=\"border-width : 1px\">";
+		print "<ul class='panel panel-scrollable list list-unstyled'>";
 		foreach ($comics as $comic) {
 			print "<li>$comic</li>";
 		}
@@ -124,16 +125,9 @@ class Af_Comics extends Plugin {
 					$node = $xpath->query('//picture[contains(@class, "item-comic-image")]/img')->item(0);
 
 					if ($node) {
-					    $node->removeAttribute("width");
-
-						if ($node->hasAttribute("srcset") && preg_match("|/transparent\.png$|", $node->getAttribute("srcset"))) {
-							if ($node->hasAttribute("data-srcset")) {
-								$node->setAttribute("srcset", $node->getAttribute("data-srcset"));
-								$node->removeAttribute("data-srcset");
-							} elseif ($node->hasAttribute("src")) {
-								$node->removeAttribute("srcset");
-							}
-						}
+						$node->removeAttribute("width");
+						$node->removeAttribute("data-srcset");
+						$node->removeAttribute("srcset");
 
 						$tpl->setVariable('ARTICLE_ID', $article_link, true);
 						$tpl->setVariable('ARTICLE_LINK', $article_link, true);
@@ -146,6 +140,7 @@ class Af_Comics extends Plugin {
 						$tpl->setVariable('ARTICLE_SOURCE_TITLE', $feed_title, true);
 
 						$tpl->addBlock('entry');
+
 					}
 				}
 			}
