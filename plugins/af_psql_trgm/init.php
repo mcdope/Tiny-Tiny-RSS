@@ -254,7 +254,7 @@ class Af_Psql_Trgm extends Plugin {
 		if (DB_TYPE != "pgsql") return $article;
 
 		$res = $this->pdo->query("select 'similarity'::regproc");
-		if (!$res->fetch()) return $article;
+		if (!$res || !$res->fetch()) return $article;
 
 		$enable_globally = $this->host->get($this, "enable_globally");
 
